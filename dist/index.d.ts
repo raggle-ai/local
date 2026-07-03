@@ -14,3 +14,4 @@ export { discoverProjectIcon, fetchGithubOwnerIcon, githubOwnerFromRemoteUrl, pr
 export { listVisibleProjects, latestSessionForWorktree, saveProjectIcon, type LatestSessionRow, type VisibleProjectRow, } from "./opencode-local";
 export { initialFavoriteProjectRenderLimit, initialNonFavoriteProjectRenderLimit, initialSearchProjectRenderLimit, maxProgressiveIconHydrationProjects, nextProjectRenderLimit, projectRenderLimitIncrement, } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
+export { scanCloneDirectoryRepositories, type DiscoveredRepository } from "./scanner";

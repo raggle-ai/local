@@ -108,3 +108,4 @@ export {
   projectRenderLimitIncrement,
 } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
+export { scanCloneDirectoryRepositories, type DiscoveredRepository } from "./scanner";

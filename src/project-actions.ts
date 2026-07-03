@@ -1,3 +1,1 @@
-export type ProjectActionConfig = {
-  ignoredSubpaths?: string[] | string;
-};
+export * from "./core/project-actions";

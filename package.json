@@ -1,8 +1,18 @@
 {
-  "name": "@raggle/raggle-local",
+  "name": "@raggle-ai/local",
   "version": "0.1.0",
   "description": "Local project discovery and expansion logic for Raggle",
   "license": "MIT",
+  "author": "Andrew Maguire",
+  "keywords": [
+    "raggle",
+    "projects",
+    "git",
+    "local-discovery"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/raggle-ai/local.git"
@@ -22,13 +32,17 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "prettier --check \"src/**/*.ts\"",
-    "fix-lint": "prettier --write \"src/**/*.ts\""
+    "fix-lint": "prettier --write \"src/**/*.ts\"",
+    "bench": "node scripts/benchmark-folder-discovery.mjs",
+    "publish:dry-run": "npm publish --dry-run"
   },
   "publishConfig": {
     "access": "public"

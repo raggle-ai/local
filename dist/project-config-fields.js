@@ -1,48 +1,17 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.normalizeTags = normalizeTags;
-exports.normalizeFolders = normalizeFolders;
-function normalizeTags(input) {
-    const tags = new Set();
-    if (Array.isArray(input)) {
-        for (const item of input) {
-            if (typeof item !== "string")
-                continue;
-            const value = item.trim();
-            if (value)
-                tags.add(value);
-        }
-        return [...tags];
-    }
-    if (input && typeof input === "object") {
-        for (const [key, value] of Object.entries(input)) {
-            const nextKey = key.trim();
-            if (nextKey && value !== false && value !== null)
-                tags.add(nextKey);
-            if (typeof value === "string") {
-                const nextValue = value.trim();
-                if (nextValue)
-                    tags.add(nextValue);
-            }
-        }
-    }
-    return [...tags];
-}
-function normalizeFolders(input) {
-    const folders = new Set();
-    if (!Array.isArray(input))
-        return [];
-    for (const item of input) {
-        if (typeof item !== "string")
-            continue;
-        const normalized = item
-            .trim()
-            .replace(/^\/+|\/+$/g, "")
-            .split("/")
-            .filter(Boolean)
-            .join("/");
-        if (normalized)
-            folders.add(normalized);
-    }
-    return [...folders];
-}
+__exportStar(require("./core/project-config-fields"), exports);
