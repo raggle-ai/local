@@ -17,8 +17,12 @@ function readTextFile(filePath) {
 }
 function gitDirectory(worktree) {
     const dotGitPath = node_path_1.default.join(worktree, ".git");
-    if (!(0, node_fs_1.existsSync)(dotGitPath))
+    const stats = (0, node_fs_1.statSync)(dotGitPath, { throwIfNoEntry: false });
+    if (!stats)
         return undefined;
+    // Regular clones have a .git directory; reading it would throw EISDIR.
+    if (stats.isDirectory())
+        return dotGitPath;
     const dotGitContent = readTextFile(dotGitPath);
     if (!dotGitContent)
         return dotGitPath;
@@ -40,32 +44,84 @@ function readCurrentBranch(gitDirectoryPath) {
     const match = head?.match(/^ref:\s+refs\/heads\/(.+)$/);
     return match?.[1];
 }
-function scanCloneDirectoryRepositories(cloneDirectory) {
+function hasBareRepoMarkers(worktree) {
+    return (((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "HEAD"), { throwIfNoEntry: false })?.isFile() ?? false) &&
+        ((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "objects"), { throwIfNoEntry: false })?.isDirectory() ?? false) &&
+        ((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "refs"), { throwIfNoEntry: false })?.isDirectory() ?? false));
+}
+function discoverRepositoryFromDirectory(worktree, configDirectory) {
+    const gitConfig = readTextFile(node_path_1.default.join(configDirectory, "config"));
+    if (!gitConfig)
+        return undefined;
+    const remoteUrl = readOriginRemoteUrl(gitConfig);
+    if (!remoteUrl)
+        return undefined;
+    const currentBranch = readCurrentBranch(configDirectory);
+    return {
+        worktree,
+        remoteUrl: (0, git_repository_1.normalizeRepositoryUrl)(remoteUrl),
+        ...(currentBranch ? { currentBranch } : {}),
+    };
+}
+function scanCloneDirectoryRepositories(cloneDirectory, options) {
+    const startedAt = Date.now();
+    const maxRepos = options?.maxRepos;
+    const timeoutMs = options?.timeoutMs;
+    const signal = options?.signal;
     const repositories = [];
+    let truncated = false;
+    let timedOut = false;
+    let stopped = false;
+    const buildResult = () => ({
+        repositories: [...repositories],
+        truncated,
+        timedOut,
+        stopped,
+        durationMs: Date.now() - startedAt,
+        maxRepos,
+        timeoutMs,
+    });
+    const isAborted = () => {
+        if (signal?.aborted) {
+            stopped = true;
+            return true;
+        }
+        return false;
+    };
+    const isTimedOut = () => {
+        if (timeoutMs !== undefined && Date.now() - startedAt > timeoutMs) {
+            timedOut = true;
+            return true;
+        }
+        return false;
+    };
     try {
         for (const entry of (0, node_fs_1.readdirSync)(cloneDirectory, { withFileTypes: true })) {
-            if (!entry.isDirectory())
+            if (!entry.isDirectory() || entry.isSymbolicLink())
                 continue;
+            if (isAborted() || isTimedOut())
+                break;
+            if (maxRepos !== undefined && repositories.length >= maxRepos) {
+                truncated = true;
+                break;
+            }
             const worktree = node_path_1.default.join(cloneDirectory, entry.name);
             const gitDirectoryPath = gitDirectory(worktree);
-            if (!gitDirectoryPath)
+            let repository;
+            if (gitDirectoryPath) {
+                repository = discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
+            }
+            else if (hasBareRepoMarkers(worktree)) {
+                repository = discoverRepositoryFromDirectory(worktree, worktree);
+            }
+            if (!repository)
                 continue;
-            const gitConfig = readTextFile(node_path_1.default.join(gitDirectoryPath, "config"));
-            if (!gitConfig)
-                continue;
-            const remoteUrl = readOriginRemoteUrl(gitConfig);
-            if (!remoteUrl)
-                continue;
-            const currentBranch = readCurrentBranch(gitDirectoryPath);
-            repositories.push({
-                worktree,
-                remoteUrl: (0, git_repository_1.normalizeRepositoryUrl)(remoteUrl),
-                ...(currentBranch ? { currentBranch } : {}),
-            });
+            repositories.push(repository);
+            options?.onProgress?.(buildResult());
         }
     }
     catch {
-        return [];
+        return buildResult();
     }
-    return repositories;
+    return buildResult();
 }

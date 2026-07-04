@@ -6,7 +6,7 @@ export { normalizeRepositoryUrl, repositoryName, repositoryDirectoryName, reposi
 export { remoteToBrowserUrl, projectRemoteUrl, projectRemoteBrowserUrl } from "./project-remote";
 export { normalizeSubpaths, normalizeSubpathPaths, normalizeSubpathPath, mergeExistingSubpathSettings, upsertSubpathSettings, readSubpathChildDirectories, type ProjectSubpathSettingsValues, } from "./project-subpaths";
 export { normalizeTags, normalizeFolders } from "./project-config-fields";
-export { DEFAULT_GLOBAL_IGNORED_SUBPATHS, normalizeIgnoredSubpaths, mergeIgnoredSubpaths, readRaggleProjectConfig, ignoredSubpathsForProjectDirectory, ignoredSubpathsFromProjectActionConfigs, type RaggleProjectConfig, } from "./raggle-project-config";
+export { DEFAULT_GLOBAL_IGNORED_SUBPATHS, DEFAULT_PROJECT_CONFIG_FILES, normalizeIgnoredSubpaths, mergeIgnoredSubpaths, readRaggleProjectConfig, readRaggleProjectConfigAsync, readProjectConfigFileAsync, resolveProjectConfigFileNames, ignoredSubpathsForProjectDirectory, ignoredSubpathsFromProjectActionConfigs, type RaggleProjectConfig, } from "./raggle-project-config";
 export { clonePathTemplateFromFormValue, deriveLocalProjectPath, deriveProjectName, getRepositoryDirectoryNameFromUrl, getRepositoryNameFromUrl, projectRowFromValues, repositoryCloneParentDirectory, repositoryRootPath, type AddProjectValues, } from "./add-project";
 export { folderDisplayName, repoPrefixedProjectName, subpathContextName, subpathParentDisplayName, subpathProjectName, } from "./folder-mapping";
 export { githubPullRequestLookupErrorMessage, githubPullRequestsBrowserUrl, githubRepositoryFromUrl, githubSearchBrowserUrl, githubSearchIssues, githubSearchOwnerRepositories, githubSearchPullRequests, githubSearchPullRequestsAndIssues, githubSearchUsers, githubViewerLogin, fallbackGitHubViewerLogin, githubPullRequestForCurrentBranch, githubPullRequestsByAuthor, type GitHubPullRequestSummary, type GitHubRepository, type GitHubRepositorySearchItem, type GitHubSearchItem, type GitHubSearchItemKind, type GitHubUserSearchItem, } from "./github";
@@ -14,4 +14,4 @@ export { discoverProjectIcon, fetchGithubOwnerIcon, githubOwnerFromRemoteUrl, pr
 export { listVisibleProjects, latestSessionForWorktree, saveProjectIcon, type LatestSessionRow, type VisibleProjectRow, } from "./opencode-local";
 export { initialFavoriteProjectRenderLimit, initialNonFavoriteProjectRenderLimit, initialSearchProjectRenderLimit, maxProgressiveIconHydrationProjects, nextProjectRenderLimit, projectRenderLimitIncrement, } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
-export { scanCloneDirectoryRepositories, type DiscoveredRepository } from "./scanner";
+export { scanCloneDirectoryRepositories, type DiscoveredRepository, type ScanCloneDirectoryOptions, type ScanCloneDirectoryResult, } from "./scanner";

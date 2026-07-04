@@ -10,9 +10,20 @@ exports.projectSubtitle = projectSubtitle;
 exports.projectAccessoryPath = projectAccessoryPath;
 const node_os_1 = __importDefault(require("node:os"));
 const node_path_1 = __importDefault(require("node:path"));
+// Remote URLs repeat across every subpath item of a repository, so keyword
+// extraction (URL parsing included) is memoized per URL.
+const repositoryKeywordsCache = new Map();
 function extractRepositoryKeywords(remoteUrl) {
     if (!remoteUrl)
         return [];
+    const cached = repositoryKeywordsCache.get(remoteUrl);
+    if (cached)
+        return cached;
+    const keywords = computeRepositoryKeywords(remoteUrl);
+    repositoryKeywordsCache.set(remoteUrl, keywords);
+    return keywords;
+}
+function computeRepositoryKeywords(remoteUrl) {
     const keywords = [];
     const normalized = remoteUrl.replace(/\.git$/, "");
     try {
@@ -87,7 +98,7 @@ function projectKeywords(item) {
     return [...values].filter(Boolean);
 }
 function standardProjectWithKeywords(item) {
-    return { ...item, keywords: projectKeywords({ ...item, keywords: undefined }) };
+    return { ...item, keywords: projectKeywords(item) };
 }
 function projectTitle(item) {
     return (item.name ?? node_path_1.default.basename(item.worktree)) || item.worktree;

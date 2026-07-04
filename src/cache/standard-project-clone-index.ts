@@ -134,11 +134,12 @@ export async function findLocalRepository(
 async function indexCloneDirectoryRepositories(
   cloneDirectory: string,
   cachePath?: string,
+  scannedRepositories?: StandardProjectsCloneIndexEntry[],
 ): Promise<CloneDirectoryRepositoryIndex> {
   const startedAt = nowMs();
   const worktreeByRepositoryKey = new Map<string, string>();
   const remoteUrlByWorktree = new Map<string, string>();
-  const discoveredRepositories = scanCloneDirectoryRepositories(cloneDirectory);
+  const discoveredRepositories = scannedRepositories ?? scanCloneDirectoryRepositories(cloneDirectory).repositories;
   const candidates: string[] = [];
 
   if (discoveredRepositories.length) {
@@ -245,7 +246,7 @@ function cloneDirectoryRepositoryIndexFromEntries(
 
 export async function prepareCloneDirectoryIndex(
   cloneDirectory: string,
-  options?: { force?: boolean; cachePath?: string },
+  options?: { force?: boolean; cachePath?: string; scannedRepositories?: StandardProjectsCloneIndexEntry[] },
 ): Promise<CloneDirectoryRepositoryIndex> {
   if (!options?.force && options?.cachePath) {
     const snapshot = readStandardProjectsCloneIndexSnapshot(cloneDirectory, options.cachePath);
@@ -254,5 +255,5 @@ export async function prepareCloneDirectoryIndex(
     }
   }
 
-  return indexCloneDirectoryRepositories(cloneDirectory, options?.cachePath);
+  return indexCloneDirectoryRepositories(cloneDirectory, options?.cachePath, options?.scannedRepositories);
 }

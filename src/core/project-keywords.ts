@@ -12,9 +12,22 @@ export type ProjectKeywordInput = {
   latestSessionTitle?: string;
 };
 
+// Remote URLs repeat across every subpath item of a repository, so keyword
+// extraction (URL parsing included) is memoized per URL.
+const repositoryKeywordsCache = new Map<string, string[]>();
+
 function extractRepositoryKeywords(remoteUrl?: string): string[] {
   if (!remoteUrl) return [];
 
+  const cached = repositoryKeywordsCache.get(remoteUrl);
+  if (cached) return cached;
+
+  const keywords = computeRepositoryKeywords(remoteUrl);
+  repositoryKeywordsCache.set(remoteUrl, keywords);
+  return keywords;
+}
+
+function computeRepositoryKeywords(remoteUrl: string): string[] {
   const keywords: string[] = [];
   const normalized = remoteUrl.replace(/\.git$/, "");
 
@@ -90,7 +103,7 @@ export function projectKeywords(item: ProjectKeywordInput) {
 }
 
 export function standardProjectWithKeywords<T extends ProjectKeywordInput>(item: T): T & { keywords: string[] } {
-  return { ...item, keywords: projectKeywords({ ...item, keywords: undefined }) };
+  return { ...item, keywords: projectKeywords(item) };
 }
 
 export function projectTitle(item: { name?: string; worktree: string }) {

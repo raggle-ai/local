@@ -19,4 +19,5 @@ export declare function findLocalRepository(remoteUrl: string, preferredWorktree
 export declare function prepareCloneDirectoryIndex(cloneDirectory: string, options?: {
     force?: boolean;
     cachePath?: string;
+    scannedRepositories?: StandardProjectsCloneIndexEntry[];
 }): Promise<CloneDirectoryRepositoryIndex>;

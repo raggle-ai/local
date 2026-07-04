@@ -3,14 +3,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_GLOBAL_IGNORED_SUBPATHS = void 0;
+exports.DEFAULT_PROJECT_CONFIG_FILES = exports.DEFAULT_GLOBAL_IGNORED_SUBPATHS = void 0;
 exports.normalizeIgnoredSubpaths = normalizeIgnoredSubpaths;
 exports.mergeIgnoredSubpaths = mergeIgnoredSubpaths;
 exports.mergeRaggleProjectConfig = mergeRaggleProjectConfig;
+exports.requiresRaggleConfigMarker = requiresRaggleConfigMarker;
+exports.resolveProjectConfigFileNames = resolveProjectConfigFileNames;
 exports.readRaggleProjectConfig = readRaggleProjectConfig;
+exports.readProjectConfigFileAsync = readProjectConfigFileAsync;
+exports.readRaggleProjectConfigAsync = readRaggleProjectConfigAsync;
 exports.ignoredSubpathsForProjectDirectory = ignoredSubpathsForProjectDirectory;
 exports.ignoredSubpathsFromProjectActionConfigs = ignoredSubpathsFromProjectActionConfigs;
 const node_fs_1 = require("node:fs");
+const promises_1 = require("node:fs/promises");
 const node_path_1 = __importDefault(require("node:path"));
 const project_config_fields_1 = require("../core/project-config-fields");
 const project_subpaths_1 = require("../core/project-subpaths");
@@ -59,30 +64,99 @@ function mergeRaggleProjectConfig(repository, config) {
         removePathFromName: repository.removePathFromName || config.removePathFromName === true,
     };
 }
-function readRaggleProjectConfig(directory) {
-    const configPath = node_path_1.default.join(directory, "raggle.json");
-    if (!(0, node_fs_1.existsSync)(configPath))
-        return {};
+/**
+ * Generic file names that are only honored as project config when the
+ * document self-identifies as one, since unrelated files often share the name.
+ */
+const GENERIC_PROJECT_CONFIG_FILES = new Set(["index.json"]);
+function isRaggleConfigDocument(parsed) {
+    if (!parsed || typeof parsed !== "object")
+        return false;
+    const document = parsed;
+    if (typeof document.$schema === "string" && document.$schema.includes("raggle"))
+        return true;
+    return document.schemaVersion !== undefined;
+}
+function requiresRaggleConfigMarker(configFile) {
+    return GENERIC_PROJECT_CONFIG_FILES.has(node_path_1.default.basename(configFile));
+}
+function normalizeRaggleProjectConfig(parsed) {
+    const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
+    return {
+        ...(name ? { name } : {}),
+        tags: (0, project_config_fields_1.normalizeTags)(parsed.tags),
+        folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
+        subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),
+        ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
+        ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
+        ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
+    };
+}
+/** Returns undefined when a generic file (like index.json) is not a raggle config. */
+function parseRaggleProjectConfig(configPath, raw, requireMarker) {
+    let parsed;
     try {
-        const parsed = JSON.parse((0, node_fs_1.readFileSync)(configPath, "utf8"));
-        const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
-        return {
-            ...(name ? { name } : {}),
-            tags: (0, project_config_fields_1.normalizeTags)(parsed.tags),
-            folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
-            subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),
-            ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
-            ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
-            ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
-        };
+        parsed = JSON.parse(raw);
     }
     catch (error) {
         console.warn(`Failed to read ${configPath}:`, error);
         return {};
     }
+    if (requireMarker && !isRaggleConfigDocument(parsed))
+        return undefined;
+    if (!parsed || typeof parsed !== "object")
+        return {};
+    return normalizeRaggleProjectConfig(parsed);
 }
-function ignoredSubpathsForProjectDirectory(directory, baseIgnoredSubpaths = []) {
-    const config = readRaggleProjectConfig(directory);
+/** Config file names checked in order; the first file that exists wins. */
+exports.DEFAULT_PROJECT_CONFIG_FILES = ["raggle.json", "index.json"];
+/** Custom names take lookup priority, followed by the defaults. */
+function resolveProjectConfigFileNames(customConfigFiles) {
+    if (!customConfigFiles?.length)
+        return exports.DEFAULT_PROJECT_CONFIG_FILES;
+    return [...new Set([...customConfigFiles, ...exports.DEFAULT_PROJECT_CONFIG_FILES])];
+}
+function readRaggleProjectConfig(directory, configFiles) {
+    for (const configFile of resolveProjectConfigFileNames(configFiles)) {
+        const configPath = node_path_1.default.join(directory, configFile);
+        let raw;
+        try {
+            raw = (0, node_fs_1.readFileSync)(configPath, "utf8");
+        }
+        catch {
+            continue;
+        }
+        const config = parseRaggleProjectConfig(configPath, raw, requiresRaggleConfigMarker(configFile));
+        if (config)
+            return config;
+    }
+    return {};
+}
+/**
+ * Reads and parses one specific config file. Returns undefined when the file
+ * is missing or when a generic file name (like index.json) does not
+ * self-identify as a raggle config via $schema or schemaVersion.
+ */
+async function readProjectConfigFileAsync(configPath) {
+    let raw;
+    try {
+        raw = await (0, promises_1.readFile)(configPath, "utf8");
+    }
+    catch {
+        return undefined;
+    }
+    return parseRaggleProjectConfig(configPath, raw, requiresRaggleConfigMarker(configPath));
+}
+async function readRaggleProjectConfigAsync(directory, configFiles) {
+    for (const configFile of resolveProjectConfigFileNames(configFiles)) {
+        const config = await readProjectConfigFileAsync(node_path_1.default.join(directory, configFile));
+        if (config)
+            return config;
+    }
+    return {};
+}
+function ignoredSubpathsForProjectDirectory(directory, baseIgnoredSubpaths = [], configFiles) {
+    const config = readRaggleProjectConfig(directory, configFiles);
     return mergeIgnoredSubpaths(baseIgnoredSubpaths, config.ignoredSubpaths);
 }
 function ignoredSubpathsFromProjectActionConfigs(configs) {

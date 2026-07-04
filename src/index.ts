@@ -40,9 +40,13 @@ export {
 export { normalizeTags, normalizeFolders } from "./project-config-fields";
 export {
   DEFAULT_GLOBAL_IGNORED_SUBPATHS,
+  DEFAULT_PROJECT_CONFIG_FILES,
   normalizeIgnoredSubpaths,
   mergeIgnoredSubpaths,
   readRaggleProjectConfig,
+  readRaggleProjectConfigAsync,
+  readProjectConfigFileAsync,
+  resolveProjectConfigFileNames,
   ignoredSubpathsForProjectDirectory,
   ignoredSubpathsFromProjectActionConfigs,
   type RaggleProjectConfig,
@@ -108,4 +112,9 @@ export {
   projectRenderLimitIncrement,
 } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
-export { scanCloneDirectoryRepositories, type DiscoveredRepository } from "./scanner";
+export {
+  scanCloneDirectoryRepositories,
+  type DiscoveredRepository,
+  type ScanCloneDirectoryOptions,
+  type ScanCloneDirectoryResult,
+} from "./scanner";

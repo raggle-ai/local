@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.standardProjectWithKeywords = exports.projectKeywords = void 0;
 exports.loadLocalProjects = loadLocalProjects;
 const node_fs_1 = require("node:fs");
+const promises_1 = require("node:fs/promises");
 const node_path_1 = __importDefault(require("node:path"));
 const add_project_1 = require("../adapters/add-project");
 const folder_mapping_1 = require("../core/folder-mapping");
@@ -19,6 +20,98 @@ Object.defineProperty(exports, "standardProjectWithKeywords", { enumerable: true
 const projectResolveBatchSize = 24;
 const subpathLoadBatchSize = 12;
 const subpathAllFolderConfigFiles = ["kennel.json"];
+const emptyDirectoryListing = { directories: [], files: new Set() };
+const emptyResolvedConfig = Promise.resolve({ config: {} });
+// Listings survive across loadLocalProjects calls, validated by directory
+// mtime (which changes whenever a direct entry is added, removed, or renamed
+// — the same invariant the clone index snapshot relies on). A hit costs one
+// stat instead of a readdir round-trip.
+const directoryListingCache = new Map();
+function createFsSession(options) {
+    const listings = new Map();
+    const existence = new Map();
+    const configs = new Map();
+    const configFiles = (0, raggle_project_config_1.resolveProjectConfigFileNames)(options?.configFiles);
+    const pathExists = (target) => {
+        let exists = existence.get(target);
+        if (exists === undefined) {
+            exists = (0, node_fs_1.statSync)(target, { throwIfNoEntry: false }) !== undefined;
+            existence.set(target, exists);
+        }
+        return exists;
+    };
+    const resolveConfigUncached = async (directory) => {
+        for (const configFile of configFiles) {
+            const configPath = directory + node_path_1.default.sep + configFile;
+            if (!pathExists(configPath))
+                continue;
+            // undefined means a generic file (like index.json) that turned out not
+            // to be a raggle config; keep looking through the remaining names.
+            const config = await (0, raggle_project_config_1.readProjectConfigFileAsync)(configPath);
+            if (config)
+                return { config, configPath };
+        }
+        return { config: {} };
+    };
+    const resolveConfig = (directory) => {
+        let resolved = configs.get(directory);
+        if (!resolved) {
+            resolved = configFiles.some((configFile) => pathExists(directory + node_path_1.default.sep + configFile))
+                ? resolveConfigUncached(directory)
+                : emptyResolvedConfig;
+            configs.set(directory, resolved);
+        }
+        return resolved;
+    };
+    return {
+        listDirectory(directory) {
+            let listing = listings.get(directory);
+            if (!listing) {
+                const stats = (0, node_fs_1.statSync)(directory, { throwIfNoEntry: false });
+                if (!stats) {
+                    listing = Promise.resolve(emptyDirectoryListing);
+                    existence.set(directory, false);
+                }
+                else {
+                    existence.set(directory, true);
+                    const cached = directoryListingCache.get(directory);
+                    if (!options?.force && cached && cached.mtimeMs === stats.mtimeMs) {
+                        listing = Promise.resolve(cached.listing);
+                    }
+                    else {
+                        const mtimeMs = stats.mtimeMs;
+                        listing = (0, promises_1.readdir)(directory, { withFileTypes: true }).then((entries) => {
+                            const directories = [];
+                            const files = new Set();
+                            for (const entry of entries) {
+                                if (entry.isDirectory())
+                                    directories.push(entry.name);
+                                else
+                                    files.add(entry.name);
+                            }
+                            const nextListing = { directories, files };
+                            directoryListingCache.set(directory, { mtimeMs, listing: nextListing });
+                            return nextListing;
+                        }, () => emptyDirectoryListing);
+                    }
+                }
+                listings.set(directory, listing);
+            }
+            return listing;
+        },
+        pathExists,
+        resolveConfig,
+        async readConfig(directory) {
+            return (await resolveConfig(directory)).config;
+        },
+    };
+}
+// Attaches keywords to a freshly constructed project without re-spreading it;
+// only safe because every caller passes an object it just created.
+function attachProjectKeywords(project) {
+    project.keywords = (0, project_keywords_1.projectKeywords)(project);
+    return project;
+}
 function nowMs() {
     return Date.now();
 }
@@ -106,25 +199,25 @@ function shouldIgnoreSubpath(relativePath, ignoredSubpaths = []) {
     });
 }
 function relativeSubpath(rootPath, worktree) {
+    // Worktrees are constructed under rootPath in the hot paths, so slicing
+    // avoids path.relative's double resolve.
+    if (worktree.startsWith(rootPath + node_path_1.default.sep)) {
+        return worktree
+            .slice(rootPath.length + 1)
+            .split(node_path_1.default.sep)
+            .join("/");
+    }
     return node_path_1.default.relative(rootPath, worktree).split(node_path_1.default.sep).join("/");
 }
 function shouldIncludeAllSubpathDirectory(name) {
     return (!name.startsWith(".") &&
         !["node_modules", "dist", "build", "coverage", ".next", ".turbo", ".vercel", "target"].includes(name));
 }
-function readTopLevelSubpathDirectories(rootPath) {
-    const directories = [];
-    try {
-        for (const entry of (0, node_fs_1.readdirSync)(rootPath, { withFileTypes: true })) {
-            if (!entry.isDirectory() || !shouldIncludeAllSubpathDirectory(entry.name))
-                continue;
-            directories.push(node_path_1.default.join(rootPath, entry.name));
-        }
-    }
-    catch {
-        // Ignore folders that cannot be read while indexing optional project subpaths.
-    }
-    return directories;
+async function readTopLevelSubpathDirectories(session, rootPath) {
+    const listing = await session.listDirectory(rootPath);
+    return listing.directories
+        .filter((name) => shouldIncludeAllSubpathDirectory(name))
+        .map((name) => rootPath + node_path_1.default.sep + name);
 }
 function subpathDirectory(rootPath, subpath) {
     return subpath.path === "." ? rootPath : node_path_1.default.join(rootPath, ...subpath.path.split("/"));
@@ -136,54 +229,55 @@ function nestedSubpathPath(parentPath, childPath) {
         return childPath;
     return `${parentPath}/${childPath}`;
 }
-function hasSubpathAllFolderConfig(directory) {
-    return subpathAllFolderConfigFiles.some((configFile) => (0, node_fs_1.existsSync)(node_path_1.default.join(directory, configFile)));
+function hasSubpathAllFolderConfig(session, directory, markerFiles) {
+    return markerFiles.some((configFile) => session.pathExists(directory + node_path_1.default.sep + configFile));
 }
-function discoverLocalConfigSubpaths(parentSubpath, parentDirectory) {
-    return readTopLevelSubpathDirectories(parentDirectory)
-        .filter((directory) => hasSubpathAllFolderConfig(directory))
+async function discoverConfigSubpaths(session, parentDirectory, markerFiles, removePathFromName) {
+    const directories = await readTopLevelSubpathDirectories(session, parentDirectory);
+    return directories
+        .filter((directory) => hasSubpathAllFolderConfig(session, directory, markerFiles))
         .map((directory) => ({
         path: relativeSubpath(parentDirectory, directory),
-        allSubpath: true,
-        removePathFromName: parentSubpath.removePathFromName,
-    }));
-}
-function discoverRootConfigSubpaths(rootPath, removePathFromName) {
-    return readTopLevelSubpathDirectories(rootPath)
-        .filter((directory) => hasSubpathAllFolderConfig(directory))
-        .map((directory) => ({
-        path: relativeSubpath(rootPath, directory),
         allSubpath: true,
         removePathFromName,
     }));
 }
-function localConfigSubpaths(rootPath, subpaths) {
+async function localConfigSubpaths(session, rootPath, subpaths, markerFiles) {
     const subpathsByPath = new Map();
-    const pendingSubpaths = [];
+    let pendingSubpaths = [];
     for (const subpath of subpaths) {
         subpathsByPath.set(subpath.path, subpath);
         pendingSubpaths.push(subpath);
     }
     while (pendingSubpaths.length) {
-        const parentSubpath = pendingSubpaths.shift();
-        if (!parentSubpath)
-            continue;
-        const parentDirectory = subpathDirectory(rootPath, parentSubpath);
-        if (!(0, node_fs_1.existsSync)(parentDirectory))
-            continue;
-        const config = (0, raggle_project_config_1.readRaggleProjectConfig)(parentDirectory);
-        const discoveredSubpaths = discoverLocalConfigSubpaths(parentSubpath, parentDirectory);
-        for (const childSubpath of [...(config.subpaths ?? []), ...discoveredSubpaths]) {
-            const childPath = nestedSubpathPath(parentSubpath.path, childSubpath.path);
-            if (subpathsByPath.has(childPath))
+        const wave = pendingSubpaths;
+        pendingSubpaths = [];
+        const waveResults = await Promise.all(wave.map(async (parentSubpath) => {
+            const parentDirectory = subpathDirectory(rootPath, parentSubpath);
+            if (!session.pathExists(parentDirectory))
+                return undefined;
+            const [config, discoveredSubpaths] = await Promise.all([
+                session.readConfig(parentDirectory),
+                discoverConfigSubpaths(session, parentDirectory, markerFiles, parentSubpath.removePathFromName),
+            ]);
+            return { parentSubpath, config, discoveredSubpaths };
+        }));
+        for (const result of waveResults) {
+            if (!result)
                 continue;
-            const nestedSubpath = {
-                ...childSubpath,
-                path: childPath,
-                removePathFromName: childSubpath.removePathFromName ?? config.removePathFromName ?? parentSubpath.removePathFromName,
-            };
-            subpathsByPath.set(childPath, nestedSubpath);
-            pendingSubpaths.push(nestedSubpath);
+            const { parentSubpath, config, discoveredSubpaths } = result;
+            for (const childSubpath of [...(config.subpaths ?? []), ...discoveredSubpaths]) {
+                const childPath = nestedSubpathPath(parentSubpath.path, childSubpath.path);
+                if (subpathsByPath.has(childPath))
+                    continue;
+                const nestedSubpath = {
+                    ...childSubpath,
+                    path: childPath,
+                    removePathFromName: childSubpath.removePathFromName ?? config.removePathFromName ?? parentSubpath.removePathFromName,
+                };
+                subpathsByPath.set(childPath, nestedSubpath);
+                pendingSubpaths.push(nestedSubpath);
+            }
         }
     }
     return [...subpathsByPath.values()];
@@ -191,8 +285,9 @@ function localConfigSubpaths(rootPath, subpaths) {
 function subpathProject(parent, worktree, displayPath, removePathFromName, subpathAllSubpath, isSubpathRoot, cached) {
     const relativePath = relativeSubpath(parent.repositoryRoot, worktree);
     const fallbackName = (0, folder_mapping_1.subpathProjectName)(displayPath);
-    return (0, project_keywords_1.standardProjectWithKeywords)({
-        ...parent,
+    // Built field-by-field instead of spreading parent: this runs once per
+    // subpath item and the spread dominated the profile.
+    return attachProjectKeywords({
         id: cached?.id ?? `${parent.remoteUrl}#${relativePath}`,
         worktree,
         repositoryRoot: parent.repositoryRoot,
@@ -201,6 +296,7 @@ function subpathProject(parent, worktree, displayPath, removePathFromName, subpa
         isSubpathRoot,
         subpathAllSubpath,
         name: fallbackName,
+        description: parent.description,
         removePathFromName,
         worktreeName: cached?.worktreeName,
         latestSessionTitle: cached?.latestSessionTitle,
@@ -214,13 +310,19 @@ function subpathProject(parent, worktree, displayPath, removePathFromName, subpa
         isFavorite: cached?.isFavorite ?? false,
         relatedIds: cached?.relatedIds ?? [`${parent.remoteUrl}#${relativePath}`],
         tags: [...new Set([...(parent.tags ?? []), ...relativePath.split("/")])],
+        plugins: parent.plugins,
+        remoteUrl: parent.remoteUrl,
+        browserUrl: parent.browserUrl,
+        allSubpath: parent.allSubpath,
+        hasCustomName: parent.hasCustomName,
+        remoteMismatch: parent.remoteMismatch,
         isCloned: true,
     });
 }
 function configuredFolderProject(parent, folder, cached) {
     const worktree = node_path_1.default.join(parent.repositoryRoot, ...folder.split("/"));
     const fallbackName = (0, folder_mapping_1.repoPrefixedProjectName)(parent, folder, parent.removePathFromName);
-    return (0, project_keywords_1.standardProjectWithKeywords)({
+    return attachProjectKeywords({
         ...parent,
         id: cached?.id ?? `${parent.remoteUrl}#${folder}`,
         worktree,
@@ -248,7 +350,7 @@ function baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, 
     const repositoryRoot = (0, add_project_1.repositoryRootPath)(repository, cloneDirectory);
     const cached = cachedProjectsByWorktree.get(repositoryRoot);
     const isCloned = (0, node_fs_1.existsSync)(node_path_1.default.join(repositoryRoot, ".git"));
-    return (0, project_keywords_1.standardProjectWithKeywords)({
+    return attachProjectKeywords({
         id: cached?.id ?? repository.remoteUrl,
         worktree: repositoryRoot,
         repositoryRoot,
@@ -275,7 +377,7 @@ function baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, 
         isCloned,
     });
 }
-async function resolveLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, repositoryIndexByParentDirectory, options) {
+async function resolveLocalProject(session, repository, cloneDirectory, cachedProjectsByWorktree, repositoryIndexByParentDirectory, options) {
     const expectedDirectory = (0, add_project_1.repositoryRootPath)(repository, cloneDirectory);
     const cloneParentDirectory = node_path_1.default.dirname(expectedDirectory);
     const repositoryIndex = repositoryIndexByParentDirectory.get(cloneParentDirectory) ?? {
@@ -286,10 +388,10 @@ async function resolveLocalProject(repository, cloneDirectory, cachedProjectsByW
     const localPath = localResult?.isMatch || localResult?.worktree === expectedDirectory ? localResult.worktree : undefined;
     const repositoryRoot = localPath ?? expectedDirectory;
     const resolvedRepository = localPath
-        ? (0, raggle_project_config_1.mergeRaggleProjectConfig)(repository, (0, raggle_project_config_1.readRaggleProjectConfig)(repositoryRoot))
+        ? (0, raggle_project_config_1.mergeRaggleProjectConfig)(repository, await session.readConfig(repositoryRoot))
         : repository;
     const cached = cachedProjectsByWorktree.get(repositoryRoot);
-    const item = (0, project_keywords_1.standardProjectWithKeywords)({
+    const item = attachProjectKeywords({
         ...baseLocalProject(resolvedRepository, cloneDirectory, cachedProjectsByWorktree, options),
         worktree: repositoryRoot,
         repositoryRoot,
@@ -312,75 +414,83 @@ async function resolveLocalProject(repository, cloneDirectory, cachedProjectsByW
     const configuredFolders = resolvedRepository.folders.map((folder) => configuredFolderProject(item, folder, cachedProjectsByWorktree.get(node_path_1.default.join(repositoryRoot, folder))));
     return { item, configuredFolders, localPath, repository: resolvedRepository };
 }
-function readLocalFolderProjects(folderPath, cachedProjectsByWorktree) {
+async function readLocalFolderProjects(session, folderPath, cachedProjectsByWorktree) {
     const items = [];
-    try {
-        for (const entry of (0, node_fs_1.readdirSync)(folderPath, { withFileTypes: true })) {
-            if (!entry.isDirectory() || entry.name.startsWith("."))
-                continue;
-            const worktree = node_path_1.default.join(folderPath, entry.name);
-            const cached = cachedProjectsByWorktree?.get(worktree);
-            const relatedIds = cached?.relatedIds ?? [worktree];
-            items.push({
-                id: cached?.id ?? worktree,
-                worktree,
-                name: cached?.name ?? node_path_1.default.basename(worktree),
-                description: cached?.description,
-                worktreeName: cached?.worktreeName,
-                keywords: cached?.keywords,
-                tags: cached?.tags,
-                latestSessionTitle: cached?.latestSessionTitle,
-                icon: cached?.icon,
-                iconColor: cached?.iconColor,
-                startupCommand: cached?.startupCommand,
-                sandboxCount: cached?.sandboxCount ?? 0,
-                updatedAt: cached?.updatedAt,
-                hasIcon: cached?.hasIcon ?? false,
-                isSessionOnly: cached?.isSessionOnly ?? false,
-                isFavorite: cached?.isFavorite ?? false,
-                relatedIds,
-                remoteUrl: cached?.remoteUrl ?? worktree,
-                isCloned: true,
-                repositoryRoot: worktree,
-            });
-        }
-    }
-    catch {
-        return [];
+    const listing = await session.listDirectory(folderPath);
+    for (const name of listing.directories) {
+        if (name.startsWith("."))
+            continue;
+        const worktree = folderPath + node_path_1.default.sep + name;
+        const cached = cachedProjectsByWorktree?.get(worktree);
+        const relatedIds = cached?.relatedIds ?? [worktree];
+        items.push({
+            id: cached?.id ?? worktree,
+            worktree,
+            name: cached?.name ?? node_path_1.default.basename(worktree),
+            description: cached?.description,
+            worktreeName: cached?.worktreeName,
+            keywords: cached?.keywords,
+            tags: cached?.tags,
+            latestSessionTitle: cached?.latestSessionTitle,
+            icon: cached?.icon,
+            iconColor: cached?.iconColor,
+            startupCommand: cached?.startupCommand,
+            sandboxCount: cached?.sandboxCount ?? 0,
+            updatedAt: cached?.updatedAt,
+            hasIcon: cached?.hasIcon ?? false,
+            isSessionOnly: cached?.isSessionOnly ?? false,
+            isFavorite: cached?.isFavorite ?? false,
+            relatedIds,
+            remoteUrl: cached?.remoteUrl ?? worktree,
+            isCloned: true,
+            repositoryRoot: worktree,
+        });
     }
     return items;
 }
-function loadResolvedLocalProjectSubpaths(resolvedProject, repository, cachedProjectsByWorktree, options) {
-    if ((!repository.subpaths.length && !repository.allSubpath) || !resolvedProject.localPath)
+async function loadResolvedLocalProjectSubpaths(session, resolvedProject, repository, cachedProjectsByWorktree, markerFiles, options) {
+    const hasCustomMarkers = Boolean(options?.subpathMarkerFiles?.length);
+    if ((!repository.subpaths.length && !repository.allSubpath && !hasCustomMarkers) || !resolvedProject.localPath) {
         return [];
+    }
     const localPath = resolvedProject.localPath;
-    const rootIgnoredSubpaths = (0, raggle_project_config_1.ignoredSubpathsForProjectDirectory)(localPath, options?.ignoredSubpaths);
+    const rootConfigResolution = await session.resolveConfig(localPath);
+    const rootConfig = rootConfigResolution.config;
+    const rootIgnoredSubpaths = (0, raggle_project_config_1.mergeIgnoredSubpaths)(options?.ignoredSubpaths, rootConfig.ignoredSubpaths);
     const configuredFolderWorktrees = new Set(resolvedProject.configuredFolders.map((folder) => folder.worktree));
-    const rootDiscoveredSubpaths = repository.allSubpath
-        ? discoverRootConfigSubpaths(localPath, resolvedProject.item.removePathFromName ?? false)
+    // Custom marker files extend discovery to repositories that opted in with a
+    // recognized root config file but did not set allSubpath or list the folders
+    // explicitly.
+    const discoverRootSubpaths = repository.allSubpath || (hasCustomMarkers && rootConfigResolution.configPath !== undefined);
+    const rootDiscoveredSubpaths = discoverRootSubpaths
+        ? await discoverConfigSubpaths(session, localPath, markerFiles, resolvedProject.item.removePathFromName ?? false)
         : [];
-    const configuredSubpathProjects = localConfigSubpaths(localPath, [
-        ...rootDiscoveredSubpaths,
-        ...repository.subpaths,
-    ]).flatMap((subpath) => {
+    const configuredSubpaths = await localConfigSubpaths(session, localPath, [...rootDiscoveredSubpaths, ...repository.subpaths], markerFiles);
+    const configuredSubpathGroups = await Promise.all(configuredSubpaths.map(async (subpath) => {
         const parentDirectory = subpathDirectory(localPath, subpath);
         const removePathFromName = subpath.removePathFromName ?? resolvedProject.item.removePathFromName ?? false;
         const includeChildSubpaths = subpath.allSubpath ?? true;
-        const parentProject = subpath.path === "." || configuredFolderWorktrees.has(parentDirectory) || !(0, node_fs_1.existsSync)(parentDirectory)
+        const parentExists = session.pathExists(parentDirectory);
+        const [parentConfig, localFolderProjects] = await Promise.all([
+            session.readConfig(parentDirectory),
+            includeChildSubpaths
+                ? readLocalFolderProjects(session, parentDirectory, cachedProjectsByWorktree)
+                : Promise.resolve([]),
+        ]);
+        const parentProject = subpath.path === "." || configuredFolderWorktrees.has(parentDirectory) || !parentExists
             ? []
             : [
                 subpathProject(resolvedProject.item, parentDirectory, subpath.path, removePathFromName, includeChildSubpaths, true, cachedProjectsByWorktree.get(parentDirectory)),
             ].filter((project) => !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths));
-        const childIgnoredSubpaths = (0, raggle_project_config_1.ignoredSubpathsForProjectDirectory)(parentDirectory, options?.ignoredSubpaths);
-        const childProjects = includeChildSubpaths
-            ? readLocalFolderProjects(parentDirectory, cachedProjectsByWorktree)
-                .map((project) => subpathProject(resolvedProject.item, project.worktree, node_path_1.default.basename(project.worktree), removePathFromName, false, false, project))
-                .filter((project) => !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths))
-            : [];
+        const childIgnoredSubpaths = (0, raggle_project_config_1.mergeIgnoredSubpaths)(options?.ignoredSubpaths, parentConfig.ignoredSubpaths);
+        const childProjects = localFolderProjects
+            .map((project) => subpathProject(resolvedProject.item, project.worktree, node_path_1.default.basename(project.worktree), removePathFromName, false, false, project))
+            .filter((project) => !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths));
         return [...parentProject, ...childProjects];
-    });
+    }));
+    const configuredSubpathProjects = configuredSubpathGroups.flat();
     const allSubpathProjects = repository.allSubpath
-        ? readTopLevelSubpathDirectories(localPath)
+        ? (await readTopLevelSubpathDirectories(session, localPath))
             .map((worktree) => {
             const relativePath = relativeSubpath(resolvedProject.item.repositoryRoot, worktree);
             return subpathProject(resolvedProject.item, worktree, relativePath, resolvedProject.item.removePathFromName ?? false, false, false, cachedProjectsByWorktree.get(worktree));
@@ -391,6 +501,8 @@ function loadResolvedLocalProjectSubpaths(resolvedProject, repository, cachedPro
 }
 async function loadLocalProjects(remoteProjects, options) {
     const startedAt = nowMs();
+    const session = createFsSession({ force: options.force, configFiles: options.projectConfigFiles });
+    const subpathMarkerFiles = [...new Set([...subpathAllFolderConfigFiles, ...(options.subpathMarkerFiles ?? [])])];
     const cloneDirectory = options.cloneDirectory;
     const cachedProjectsByWorktree = options.cachedProjectsByWorktree ?? new Map();
     const repositories = remoteProjects.map(normalizeRemoteProject);
@@ -405,6 +517,7 @@ async function loadLocalProjects(remoteProjects, options) {
         await (0, standard_project_clone_index_1.prepareCloneDirectoryIndex)(directory, {
             force: options.force,
             cachePath: options.cloneIndexCachePath,
+            scannedRepositories: directory === cloneDirectory ? options.scannedRepositories : undefined,
         }),
     ])));
     logProjectLoadTiming("prepareCloneDirectoryIndex", indexStartedAt, {
@@ -412,7 +525,7 @@ async function loadLocalProjects(remoteProjects, options) {
         indexed: [...repositoryIndexByParentDirectory.values()].reduce((count, repositoryIndex) => count + repositoryIndex.remoteUrlByWorktree.size, 0),
     });
     const resolveStartedAt = nowMs();
-    const resolvedProjects = await mapInBatches(repositories, projectResolveBatchSize, async (repository) => resolveLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, repositoryIndexByParentDirectory, options));
+    const resolvedProjects = await mapInBatches(repositories, projectResolveBatchSize, async (repository) => resolveLocalProject(session, repository, cloneDirectory, cachedProjectsByWorktree, repositoryIndexByParentDirectory, options));
     logProjectLoadTiming("resolveLocalProjects", resolveStartedAt, { repositories: repositories.length });
     const seenWorktrees = new Set();
     const resolvedItems = [];
@@ -429,7 +542,7 @@ async function loadLocalProjects(remoteProjects, options) {
             const resolvedProject = resolvedProjects[index];
             if (!resolvedProject)
                 return [];
-            return loadResolvedLocalProjectSubpaths(resolvedProject, resolvedProject.repository, cachedProjectsByWorktree, options);
+            return loadResolvedLocalProjectSubpaths(session, resolvedProject, resolvedProject.repository, cachedProjectsByWorktree, subpathMarkerFiles, options);
         }));
         for (const group of subpathGroups) {
             subpathItemCount += group.length;

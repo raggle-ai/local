@@ -42,6 +42,8 @@
     "lint": "prettier --check \"src/**/*.ts\"",
     "fix-lint": "prettier --write \"src/**/*.ts\"",
     "bench": "node scripts/benchmark-folder-discovery.mjs",
+    "bench:projects-db": "npm run build && node scripts/benchmark-project-db-folder-fetch.mjs",
+    "bench:data": "npm run build && node scripts/benchmark-data-folder-fetch.mjs",
     "publish:dry-run": "npm publish --dry-run"
   },
   "publishConfig": {
