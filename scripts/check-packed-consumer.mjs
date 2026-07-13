@@ -35,7 +35,9 @@ try {
           { owner: "raggle-ai", repo: "local", browserUrl: "https://github.com/raggle-ai/local" },
           ["alice", "bob"],
         );
+        if (typeof pkg.githubAuthenticatedAccounts !== "function") throw new Error("missing githubAuthenticatedAccounts");
         if (typeof pkg.githubCliPath !== "function") throw new Error("missing githubCliPath");
+        if (typeof pkg.mergeRaggleProjectConfig !== "function") throw new Error("missing mergeRaggleProjectConfig");
         if (typeof pkg.readImportedRepositoryPlugins !== "function") throw new Error("missing readImportedRepositoryPlugins");
         if (typeof pkg.raggleProjectConfigFromProjectActionConfigs !== "function") throw new Error("missing config helper");
         process.stdout.write(url);

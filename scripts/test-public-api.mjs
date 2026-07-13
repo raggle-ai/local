@@ -4,8 +4,10 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  githubAuthenticatedAccounts,
   githubCliPath,
   githubPullRequestsBrowserUrl,
+  mergeRaggleProjectConfig,
   readImportedRepositoryPlugins,
   raggleProjectConfigFromProjectActionConfigs,
 } from "../dist/index.js";
@@ -17,6 +19,8 @@ const repository = {
 };
 
 assert.equal(typeof githubCliPath(), "string");
+assert.equal(typeof githubAuthenticatedAccounts, "function");
+assert.equal(typeof mergeRaggleProjectConfig, "function");
 assert.equal(githubPullRequestsBrowserUrl(repository), "https://github.com/raggle-ai/local/pulls");
 assert.equal(
   githubPullRequestsBrowserUrl(repository, ["alice", "bob"]),
