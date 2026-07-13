@@ -49,11 +49,29 @@ export type LocalProject = {
         actualRemoteUrl: string;
     };
 };
+export type LocalProjectLoadPhase = "repositories" | "resolved" | "subpaths";
+export type LocalProjectDelta = {
+    /** New or changed projects relative to LoadLocalProjectsOptions.previousItems. */
+    upserted: LocalProject[];
+    /** Stale worktrees, populated only by the authoritative final update. */
+    removedWorktrees: string[];
+};
+export type LocalProjectUpdate = {
+    /** The phase snapshot. Partial snapshots intentionally omit undiscovered subpaths. */
+    items: LocalProject[];
+    phase: LocalProjectLoadPhase;
+    /** True only when items is complete and safe to use as a replacement list. */
+    authoritative: boolean;
+    delta: LocalProjectDelta;
+};
 export type LoadLocalProjectsOptions = {
     cloneDirectory: string;
     ignoredSubpaths?: string[];
     force?: boolean;
-    onUpdate?: (items: LocalProject[]) => void;
+    /** Receives the legacy phase items plus metadata describing completeness and changes. */
+    onUpdate?: (items: LocalProject[], update: LocalProjectUpdate) => void;
+    /** Last complete result, used as the baseline for progressive update deltas. */
+    previousItems?: readonly LocalProject[];
     cloneIndexCachePath?: string;
     cachedProjectsByWorktree?: Map<string, LocalProject>;
     /** Repositories already discovered in cloneDirectory, so indexing can skip its own scan. */
