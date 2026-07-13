@@ -39,6 +39,8 @@
     "build": "tsc",
     "prepack": "npm run build",
     "test:updates": "npm run build && node scripts/test-project-updates.mjs",
+    "test:public-api": "npm run build && node scripts/test-public-api.mjs",
+    "test:pack-consumer": "node scripts/check-packed-consumer.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "prettier --check \"src/**/*.ts\"",
     "fix-lint": "prettier --write \"src/**/*.ts\"",

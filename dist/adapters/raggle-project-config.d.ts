@@ -29,3 +29,4 @@ export declare function readProjectConfigFileAsync(configPath: string): Promise<
 export declare function readRaggleProjectConfigAsync(directory: string, configFiles?: string[]): Promise<RaggleProjectConfig>;
 export declare function ignoredSubpathsForProjectDirectory(directory: string, baseIgnoredSubpaths?: string[], configFiles?: string[]): string[];
 export declare function ignoredSubpathsFromProjectActionConfigs(configs: ProjectActionConfig[]): string[];
+export declare function raggleProjectConfigFromProjectActionConfigs(configs: ProjectActionConfig[]): RaggleProjectConfig;

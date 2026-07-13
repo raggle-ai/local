@@ -20,6 +20,17 @@ npm install github:raggle-ai/local
 import { loadLocalProjects, scanCloneDirectoryRepositories } from "@raggle-ai/local";
 ```
 
+The package also exports import-file helpers, project-action config merging, and GitHub CLI helpers used by downstream consumers:
+
+```ts
+import {
+  githubAuthenticatedAccounts,
+  githubPullRequestsBrowserUrl,
+  raggleProjectConfigFromProjectActionConfigs,
+  readImportedRepositoryPlugins,
+} from "@raggle-ai/local";
+```
+
 The package exposes a TypeScript API and ships compiled CommonJS files in `dist`.
 
 ## Layout
@@ -86,6 +97,34 @@ await loadLocalProjects(projects, {
 });
 ```
 
+## Import Files
+
+Import files can include a top-level `plugins` array alongside `projects`. `readImportedRepositoryPlugins` resolves relative and home-directory plugin paths for the caller:
+
+```ts
+const plugins = readImportedRepositoryPlugins("/path/to/projects.json");
+```
+
+## Project Action Config
+
+`raggleProjectConfigFromProjectActionConfigs` converts a list of project action configs into the normalized project-config shape used by discovery:
+
+```ts
+const merged = raggleProjectConfigFromProjectActionConfigs([
+  { tags: ["shared"], subpaths: ["apps/web"] },
+  { folders: ["team-a"], allSubpath: true },
+]);
+```
+
+## GitHub Helpers
+
+`githubAuthenticatedAccounts` exposes the configured GitHub CLI accounts, and `githubPullRequestsBrowserUrl` accepts either a single author or a list of authors when building a PR view URL:
+
+```ts
+const accounts = await githubAuthenticatedAccounts();
+const url = githubPullRequestsBrowserUrl(repository, accounts.map((account) => account.username));
+```
+
 ```sh
 npm run build
 npm run bench
@@ -98,6 +137,8 @@ npm install
 npm run typecheck
 npm run lint
 npm run build
+npm run test:public-api
+npm run test:pack-consumer
 npm run publish:dry-run
 ```
 

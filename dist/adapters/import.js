@@ -7,6 +7,7 @@ exports.normalizeTags = exports.normalizeFolders = exports.normalizeSubpathPaths
 exports.normalizeClonePathTemplate = normalizeClonePathTemplate;
 exports.normalizePlugins = normalizePlugins;
 exports.readImportedRepositoryRows = readImportedRepositoryRows;
+exports.readImportedRepositoryPlugins = readImportedRepositoryPlugins;
 exports.writeImportedRepositoryRows = writeImportedRepositoryRows;
 exports.loadImportedRepositories = loadImportedRepositories;
 exports.loadImportedRepositoriesFromRows = loadImportedRepositoriesFromRows;
@@ -175,6 +176,9 @@ function readImportedRepositoryRows(filePath) {
         }
         return row;
     });
+}
+function readImportedRepositoryPlugins(filePath) {
+    return readImportedRepositoryFile(filePath).plugins;
 }
 function writeImportedRepositoryRows(filePath, rows) {
     const content = (0, node_fs_1.readFileSync)(filePath, "utf8");

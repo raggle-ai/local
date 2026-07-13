@@ -4,7 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.githubRepositoryFromUrl = githubRepositoryFromUrl;
+exports.githubCliPath = githubCliPath;
 exports.githubViewerLogin = githubViewerLogin;
+exports.githubAuthenticatedAccounts = githubAuthenticatedAccounts;
 exports.githubSearchUsers = githubSearchUsers;
 exports.githubSearchOwnerRepositories = githubSearchOwnerRepositories;
 exports.githubPullRequestLookupErrorMessage = githubPullRequestLookupErrorMessage;
@@ -76,6 +78,20 @@ function githubCliPath() {
 }
 async function githubViewerLogin() {
     return ghOutput(["api", "user", "--template", "{{.login}}"]);
+}
+async function githubAuthenticatedAccounts() {
+    const output = await ghOutput(["auth", "status"]);
+    const accountMatches = [
+        ...output.matchAll(/Logged in to github\.com account ([^\s]+) \(keyring\)([\s\S]*?)(?=\n\n|\n  \u2713|\n  X|$)/g),
+    ];
+    return accountMatches.map((match) => {
+        const username = match[1];
+        return {
+            username,
+            active: match[2].includes("Active account: true"),
+            avatarUrl: `https://github.com/${encodeURIComponent(username)}.png`,
+        };
+    });
 }
 async function githubSearchUsers(query, limit = 20) {
     const trimmedQuery = query.trim();
@@ -252,10 +268,12 @@ async function githubPullRequestForCurrentBranch(repository, worktree) {
         return undefined;
     }
 }
-function githubPullRequestsBrowserUrl(repository, author) {
-    if (!author)
+function githubPullRequestsBrowserUrl(repository, authors) {
+    const authorList = Array.isArray(authors) ? authors : authors ? [authors] : [];
+    if (!authorList.length)
         return `${repository.browserUrl}/pulls`;
-    const query = encodeURIComponent(`is:pr is:open author:${author}`);
+    const authorQuery = authorList.map((author) => `author:${author}`).join(" ");
+    const query = encodeURIComponent(`is:pr is:open ${authorQuery}`);
     return `${repository.browserUrl}/pulls?q=${query}`;
 }
 function githubSearchBrowserUrl(repository, query, kind = "all") {

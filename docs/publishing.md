@@ -9,8 +9,12 @@ npm ci
 npm run typecheck
 npm run lint
 npm run build
+npm run test:public-api
+npm run test:pack-consumer
 npm run publish:dry-run
 ```
+
+For a local npm CLI publish, use `npm publish --access public`. Do not pass `--provenance` locally; provenance generation is only supported in the GitHub Actions trusted publishing flow.
 
 ## GitHub Actions
 

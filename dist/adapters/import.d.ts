@@ -31,6 +31,7 @@ export type ImportedRepository = {
 export declare function normalizeClonePathTemplate(input: unknown): string | undefined;
 export declare function normalizePlugins(input: unknown, baseDirectory: string): string[];
 export declare function readImportedRepositoryRows(filePath: string): ImportedRepositoryRow[];
+export declare function readImportedRepositoryPlugins(filePath: string): string[];
 export declare function writeImportedRepositoryRows(filePath: string, rows: ImportedRepositoryRow[]): void;
 export declare function loadImportedRepositories(filePath: string): {
     remoteUrl: string;
