@@ -192,3 +192,16 @@ export function ignoredSubpathsForProjectDirectory(
 export function ignoredSubpathsFromProjectActionConfigs(configs: ProjectActionConfig[]) {
   return mergeIgnoredSubpaths(...configs.map((config) => normalizeIgnoredSubpaths(config.ignoredSubpaths)));
 }
+
+export function raggleProjectConfigFromProjectActionConfigs(configs: ProjectActionConfig[]): RaggleProjectConfig {
+  return {
+    tags: [...new Set(configs.flatMap((config) => normalizeTags(config.tags)))],
+    folders: [...new Set(configs.flatMap((config) => normalizeFolders(config.folders)))],
+    subpaths: mergeConfiguredPaths(
+      [],
+      configs.flatMap((config) => normalizeSubpaths(config.subpaths)),
+    ),
+    allSubpath: configs.some((config) => config.allSubpath === true),
+    removePathFromName: configs.some((config) => config.removePathFromName === true),
+  };
+}

@@ -51,6 +51,12 @@ export type GitHubRepositorySearchItem = {
   isFork: boolean;
 };
 
+export type GitHubAuthenticatedAccount = {
+  username: string;
+  active: boolean;
+  avatarUrl: string;
+};
+
 export function githubRepositoryFromUrl(input?: string) {
   if (!input) return undefined;
 
@@ -93,7 +99,7 @@ function executableSearchPaths() {
   ];
 }
 
-function githubCliPath() {
+export function githubCliPath() {
   for (const directory of executableSearchPaths()) {
     const candidate = path.join(directory, "gh");
 
@@ -110,6 +116,23 @@ function githubCliPath() {
 
 export async function githubViewerLogin() {
   return ghOutput(["api", "user", "--template", "{{.login}}"]);
+}
+
+export async function githubAuthenticatedAccounts(): Promise<GitHubAuthenticatedAccount[]> {
+  const output = await ghOutput(["auth", "status"]);
+  const accountMatches = [
+    ...output.matchAll(/Logged in to github\.com account ([^\s]+) \(keyring\)([\s\S]*?)(?=\n\n|\n  \u2713|\n  X|$)/g),
+  ];
+
+  return accountMatches.map((match) => {
+    const username = match[1];
+
+    return {
+      username,
+      active: match[2].includes("Active account: true"),
+      avatarUrl: `https://github.com/${encodeURIComponent(username)}.png`,
+    };
+  });
 }
 
 export async function githubSearchUsers(query: string, limit = 20): Promise<GitHubUserSearchItem[]> {
@@ -341,9 +364,12 @@ export async function githubPullRequestForCurrentBranch(repository: GitHubReposi
   }
 }
 
-export function githubPullRequestsBrowserUrl(repository: GitHubRepository, author?: string) {
-  if (!author) return `${repository.browserUrl}/pulls`;
-  const query = encodeURIComponent(`is:pr is:open author:${author}`);
+export function githubPullRequestsBrowserUrl(repository: GitHubRepository, authors?: string | string[]) {
+  const authorList = Array.isArray(authors) ? authors : authors ? [authors] : [];
+  if (!authorList.length) return `${repository.browserUrl}/pulls`;
+
+  const authorQuery = authorList.map((author) => `author:${author}`).join(" ");
+  const query = encodeURIComponent(`is:pr is:open ${authorQuery}`);
   return `${repository.browserUrl}/pulls?q=${query}`;
 }
 

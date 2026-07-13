@@ -16,6 +16,7 @@ export {
   loadImportedRepositoriesFromRows,
   normalizeClonePathTemplate,
   normalizePlugins,
+  readImportedRepositoryPlugins,
   readImportedRepositoryRows,
   writeImportedRepositoryRows,
   loadRepositorySubpaths,
@@ -47,12 +48,14 @@ export {
   DEFAULT_PROJECT_CONFIG_FILES,
   normalizeIgnoredSubpaths,
   mergeIgnoredSubpaths,
+  mergeRaggleProjectConfig,
   readRaggleProjectConfig,
   readRaggleProjectConfigAsync,
   readProjectConfigFileAsync,
   resolveProjectConfigFileNames,
   ignoredSubpathsForProjectDirectory,
   ignoredSubpathsFromProjectActionConfigs,
+  raggleProjectConfigFromProjectActionConfigs,
   type RaggleProjectConfig,
 } from "./raggle-project-config";
 export {
@@ -74,6 +77,8 @@ export {
   subpathProjectName,
 } from "./folder-mapping";
 export {
+  githubAuthenticatedAccounts,
+  githubCliPath,
   githubPullRequestLookupErrorMessage,
   githubPullRequestsBrowserUrl,
   githubRepositoryFromUrl,
@@ -87,6 +92,7 @@ export {
   fallbackGitHubViewerLogin,
   githubPullRequestForCurrentBranch,
   githubPullRequestsByAuthor,
+  type GitHubAuthenticatedAccount,
   type GitHubPullRequestSummary,
   type GitHubRepository,
   type GitHubRepositorySearchItem,

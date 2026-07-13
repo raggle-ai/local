@@ -208,6 +208,10 @@ export function readImportedRepositoryRows(filePath: string) {
   });
 }
 
+export function readImportedRepositoryPlugins(filePath: string) {
+  return readImportedRepositoryFile(filePath).plugins;
+}
+
 export function writeImportedRepositoryRows(filePath: string, rows: ImportedRepositoryRow[]) {
   const content = readFileSync(filePath, "utf8");
   const parsed = parseJsonc(content);

@@ -14,6 +14,7 @@ exports.readProjectConfigFileAsync = readProjectConfigFileAsync;
 exports.readRaggleProjectConfigAsync = readRaggleProjectConfigAsync;
 exports.ignoredSubpathsForProjectDirectory = ignoredSubpathsForProjectDirectory;
 exports.ignoredSubpathsFromProjectActionConfigs = ignoredSubpathsFromProjectActionConfigs;
+exports.raggleProjectConfigFromProjectActionConfigs = raggleProjectConfigFromProjectActionConfigs;
 const node_fs_1 = require("node:fs");
 const promises_1 = require("node:fs/promises");
 const node_path_1 = __importDefault(require("node:path"));
@@ -161,4 +162,13 @@ function ignoredSubpathsForProjectDirectory(directory, baseIgnoredSubpaths = [],
 }
 function ignoredSubpathsFromProjectActionConfigs(configs) {
     return mergeIgnoredSubpaths(...configs.map((config) => normalizeIgnoredSubpaths(config.ignoredSubpaths)));
+}
+function raggleProjectConfigFromProjectActionConfigs(configs) {
+    return {
+        tags: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeTags)(config.tags)))],
+        folders: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeFolders)(config.folders)))],
+        subpaths: mergeConfiguredPaths([], configs.flatMap((config) => (0, project_subpaths_1.normalizeSubpaths)(config.subpaths))),
+        allSubpath: configs.some((config) => config.allSubpath === true),
+        removePathFromName: configs.some((config) => config.removePathFromName === true),
+    };
 }
