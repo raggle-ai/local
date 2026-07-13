@@ -17,6 +17,7 @@ const standard_project_clone_index_1 = require("../cache/standard-project-clone-
 const project_keywords_1 = require("../core/project-keywords");
 Object.defineProperty(exports, "projectKeywords", { enumerable: true, get: function () { return project_keywords_1.projectKeywords; } });
 Object.defineProperty(exports, "standardProjectWithKeywords", { enumerable: true, get: function () { return project_keywords_1.standardProjectWithKeywords; } });
+const project_load_update_1 = require("../core/project-load-update");
 const projectResolveBatchSize = 24;
 const subpathLoadBatchSize = 12;
 const subpathAllFolderConfigFiles = ["kennel.json"];
@@ -506,8 +507,12 @@ async function loadLocalProjects(remoteProjects, options) {
     const cloneDirectory = options.cloneDirectory;
     const cachedProjectsByWorktree = options.cachedProjectsByWorktree ?? new Map();
     const repositories = remoteProjects.map(normalizeRemoteProject);
+    const previousItems = options.previousItems ?? [];
+    const emitUpdate = (items, phase) => {
+        options.onUpdate?.(items, (0, project_load_update_1.createLocalProjectUpdate)(previousItems, items, phase));
+    };
     const initialItems = sortLocalProjects(repositories.map((repository) => baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, options)));
-    options.onUpdate?.(initialItems);
+    emitUpdate(initialItems, "repositories");
     const indexStartedAt = nowMs();
     const cloneParentDirectories = [
         ...new Set(repositories.map((repository) => (0, add_project_1.repositoryCloneParentDirectory)(repository, cloneDirectory))),
@@ -532,7 +537,7 @@ async function loadLocalProjects(remoteProjects, options) {
     for (const resolvedProject of resolvedProjects) {
         addUniqueLocalProjects(resolvedItems, seenWorktrees, [resolvedProject.item, ...resolvedProject.configuredFolders]);
     }
-    options.onUpdate?.(sortLocalProjects(resolvedItems));
+    emitUpdate(sortLocalProjects(resolvedItems), "resolved");
     const subpathStartedAt = nowMs();
     const items = [...resolvedItems];
     let subpathItemCount = 0;
@@ -553,8 +558,8 @@ async function loadLocalProjects(remoteProjects, options) {
         repositories: repositories.length,
         subpathItems: subpathItemCount,
     });
-    options.onUpdate?.(sortLocalProjects(items));
     const nextItems = sortLocalProjects(items);
+    emitUpdate(nextItems, "subpaths");
     logProjectLoadTiming("loadLocalProjects", startedAt, {
         repositories: repositories.length,
         items: nextItems.length,

@@ -25,6 +25,7 @@ import {
   type NormalizedRemoteProject,
   type RemoteProject,
 } from "../core/types";
+import { createLocalProjectUpdate } from "../core/project-load-update";
 
 const projectResolveBatchSize = 24;
 const subpathLoadBatchSize = 12;
@@ -686,10 +687,14 @@ export async function loadLocalProjects(
   const cloneDirectory = options.cloneDirectory;
   const cachedProjectsByWorktree = options.cachedProjectsByWorktree ?? new Map<string, LocalProject>();
   const repositories = remoteProjects.map(normalizeRemoteProject);
+  const previousItems = options.previousItems ?? [];
+  const emitUpdate = (items: LocalProject[], phase: "repositories" | "resolved" | "subpaths") => {
+    options.onUpdate?.(items, createLocalProjectUpdate(previousItems, items, phase));
+  };
   const initialItems = sortLocalProjects(
     repositories.map((repository) => baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, options)),
   );
-  options.onUpdate?.(initialItems);
+  emitUpdate(initialItems, "repositories");
 
   const indexStartedAt = nowMs();
   const cloneParentDirectories = [
@@ -736,7 +741,7 @@ export async function loadLocalProjects(
   for (const resolvedProject of resolvedProjects) {
     addUniqueLocalProjects(resolvedItems, seenWorktrees, [resolvedProject.item, ...resolvedProject.configuredFolders]);
   }
-  options.onUpdate?.(sortLocalProjects(resolvedItems));
+  emitUpdate(sortLocalProjects(resolvedItems), "resolved");
 
   const subpathStartedAt = nowMs();
   const items = [...resolvedItems];
@@ -769,9 +774,8 @@ export async function loadLocalProjects(
     subpathItems: subpathItemCount,
   });
 
-  options.onUpdate?.(sortLocalProjects(items));
-
   const nextItems = sortLocalProjects(items);
+  emitUpdate(nextItems, "subpaths");
   logProjectLoadTiming("loadLocalProjects", startedAt, {
     repositories: repositories.length,
     items: nextItems.length,

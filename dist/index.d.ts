@@ -1,5 +1,6 @@
 export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./load-local-projects";
-export type { LocalProject, LoadLocalProjectsOptions, NormalizedRemoteProject, ProjectActionConfig, RemoteProject, } from "./types";
+export type { LocalProject, LocalProjectDelta, LocalProjectLoadPhase, LocalProjectUpdate, LoadLocalProjectsOptions, NormalizedRemoteProject, ProjectActionConfig, RemoteProject, } from "./types";
+export { applyLocalProjectDelta, createLocalProjectUpdate } from "./core/project-load-update";
 export type { ImportedRepositorySubpath } from "./project-subpaths";
 export { loadImportedRepositories, loadImportedRepositoriesFromRows, normalizeClonePathTemplate, normalizePlugins, readImportedRepositoryRows, writeImportedRepositoryRows, loadRepositorySubpaths, type ImportedRepository, type ImportedRepositoryRow, } from "./import";
 export { normalizeRepositoryUrl, repositoryName, repositoryDirectoryName, repositoryLookupKey, githubRepositoryPath, gitRemoteUrl, gitCurrentBranch, } from "./git-repository";
