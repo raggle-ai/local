@@ -3,6 +3,7 @@ import { type ImportedRepositorySubpath } from "../core/project-subpaths";
 import type { ProjectActionConfig } from "../core/project-actions";
 export declare const DEFAULT_GLOBAL_IGNORED_SUBPATHS: string[];
 export type RaggleProjectConfig = {
+    /** @deprecated Repository-local names are ignored; provide the name in RemoteProject instead. */
     name?: string;
     tags?: string[];
     folders?: string[];

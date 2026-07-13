@@ -9,6 +9,7 @@ import type { ProjectActionConfig } from "../core/project-actions";
 export const DEFAULT_GLOBAL_IGNORED_SUBPATHS = [".raggle"];
 
 export type RaggleProjectConfig = {
+  /** @deprecated Repository-local names are ignored; provide the name in RemoteProject instead. */
   name?: string;
   tags?: string[];
   folders?: string[];
@@ -55,13 +56,8 @@ export function mergeRaggleProjectConfig(
   repository: ImportedRepository,
   config: RaggleProjectConfig,
 ): ImportedRepository {
-  const hasLocalName = Boolean(config.name);
-  const name = repository.name ?? config.name;
-
   return {
     ...repository,
-    ...(name ? { name } : {}),
-    hasCustomName: repository.hasCustomName || hasLocalName,
     tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
     folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
     subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
@@ -88,7 +84,6 @@ export function requiresRaggleConfigMarker(configFile: string) {
 }
 
 function normalizeRaggleProjectConfig(parsed: {
-  name?: unknown;
   tags?: unknown;
   folders?: unknown;
   subpaths?: unknown;
@@ -96,10 +91,7 @@ function normalizeRaggleProjectConfig(parsed: {
   removePathFromName?: unknown;
   ignoredSubpaths?: unknown;
 }): RaggleProjectConfig {
-  const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
-
   return {
-    ...(name ? { name } : {}),
     tags: normalizeTags(parsed.tags),
     folders: normalizeFolders(parsed.folders),
     subpaths: normalizeSubpaths(parsed.subpaths),

@@ -1,6 +1,6 @@
 {
   "name": "@raggle-ai/local",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Local project discovery and expansion logic for Raggle",
   "license": "MIT",
   "author": "Andrew Maguire",
@@ -39,6 +39,7 @@
     "build": "tsc",
     "prepack": "npm run build",
     "test:updates": "npm run build && node scripts/test-project-updates.mjs",
+    "test:project-config": "npm run build && node scripts/test-project-config.mjs",
     "test:public-api": "npm run build && node scripts/test-public-api.mjs",
     "test:pack-consumer": "node scripts/check-packed-consumer.mjs",
     "typecheck": "tsc --noEmit",

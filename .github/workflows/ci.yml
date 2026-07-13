@@ -21,6 +21,7 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm run test:updates
+      - run: npm run test:project-config
       - run: npm run test:public-api
       - run: npm run test:pack-consumer
       - run: npm run publish:dry-run

@@ -52,12 +52,8 @@ function mergeConfiguredPaths(localItems, importedItems) {
     return [...itemsByPath.values()];
 }
 function mergeRaggleProjectConfig(repository, config) {
-    const hasLocalName = Boolean(config.name);
-    const name = repository.name ?? config.name;
     return {
         ...repository,
-        ...(name ? { name } : {}),
-        hasCustomName: repository.hasCustomName || hasLocalName,
         tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
         folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
         subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
@@ -82,9 +78,7 @@ function requiresRaggleConfigMarker(configFile) {
     return GENERIC_PROJECT_CONFIG_FILES.has(node_path_1.default.basename(configFile));
 }
 function normalizeRaggleProjectConfig(parsed) {
-    const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
     return {
-        ...(name ? { name } : {}),
         tags: (0, project_config_fields_1.normalizeTags)(parsed.tags),
         folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
         subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),

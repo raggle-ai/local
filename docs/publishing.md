@@ -9,6 +9,8 @@ npm ci
 npm run typecheck
 npm run lint
 npm run build
+npm run test:updates
+npm run test:project-config
 npm run test:public-api
 npm run test:pack-consumer
 npm run publish:dry-run
