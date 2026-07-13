@@ -97,6 +97,8 @@ await loadLocalProjects(projects, {
 });
 ```
 
+Repository-local config contributes tags, folders, subpaths, and discovery settings. Project names remain sourced from the `RemoteProject` input so progressive updates use one stable name.
+
 ## Import Files
 
 Import files can include a top-level `plugins` array alongside `projects`. `readImportedRepositoryPlugins` resolves relative and home-directory plugin paths for the caller:
@@ -137,6 +139,7 @@ npm install
 npm run typecheck
 npm run lint
 npm run build
+npm run test:project-config
 npm run test:public-api
 npm run test:pack-consumer
 npm run publish:dry-run
