@@ -57,7 +57,7 @@ function mergeRaggleProjectConfig(repository, config) {
         tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
         folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
         subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
-        allSubpath: repository.allSubpath || config.allSubpath === true,
+        allSubpath: repository.allSubpath || config.allSubpath === true || config.allSubpaths === true,
         removePathFromName: repository.removePathFromName || config.removePathFromName === true,
     };
 }
@@ -83,6 +83,7 @@ function normalizeRaggleProjectConfig(parsed) {
         folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
         subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),
         ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
+        ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
         ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
         ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
     };

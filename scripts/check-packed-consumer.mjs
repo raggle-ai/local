@@ -40,6 +40,21 @@ try {
         if (typeof pkg.mergeRaggleProjectConfig !== "function") throw new Error("missing mergeRaggleProjectConfig");
         if (typeof pkg.readImportedRepositoryPlugins !== "function") throw new Error("missing readImportedRepositoryPlugins");
         if (typeof pkg.raggleProjectConfigFromProjectActionConfigs !== "function") throw new Error("missing config helper");
+        const merged = pkg.mergeRaggleProjectConfig(
+          {
+            remoteUrl: "https://github.com/raggle-ai/local",
+            repository: "local",
+            hasCustomName: false,
+            tags: [],
+            subpaths: [],
+            allSubpath: false,
+            folders: [],
+            plugins: [],
+            removePathFromName: false,
+          },
+          { allSubpaths: true },
+        );
+        if (merged.allSubpath !== true) throw new Error("allSubpaths alias was not included in the packed package");
         process.stdout.write(url);
       `,
     ],
