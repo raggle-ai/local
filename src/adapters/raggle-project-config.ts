@@ -15,6 +15,8 @@ export type RaggleProjectConfig = {
   folders?: string[];
   subpaths?: ImportedRepositorySubpath[];
   allSubpath?: boolean;
+  /** Config-friendly plural alias for enabling repository-wide subpath discovery. */
+  allSubpaths?: boolean;
   removePathFromName?: boolean;
   ignoredSubpaths?: string[];
 };
@@ -61,7 +63,7 @@ export function mergeRaggleProjectConfig(
     tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
     folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
     subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
-    allSubpath: repository.allSubpath || config.allSubpath === true,
+    allSubpath: repository.allSubpath || config.allSubpath === true || config.allSubpaths === true,
     removePathFromName: repository.removePathFromName || config.removePathFromName === true,
   };
 }
@@ -88,6 +90,7 @@ function normalizeRaggleProjectConfig(parsed: {
   folders?: unknown;
   subpaths?: unknown;
   allSubpath?: unknown;
+  allSubpaths?: unknown;
   removePathFromName?: unknown;
   ignoredSubpaths?: unknown;
 }): RaggleProjectConfig {
@@ -96,6 +99,7 @@ function normalizeRaggleProjectConfig(parsed: {
     folders: normalizeFolders(parsed.folders),
     subpaths: normalizeSubpaths(parsed.subpaths),
     ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
+    ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
     ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
     ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
   };

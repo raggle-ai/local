@@ -9,6 +9,8 @@ export type RaggleProjectConfig = {
     folders?: string[];
     subpaths?: ImportedRepositorySubpath[];
     allSubpath?: boolean;
+    /** Config-friendly plural alias for enabling repository-wide subpath discovery. */
+    allSubpaths?: boolean;
     removePathFromName?: boolean;
     ignoredSubpaths?: string[];
 };
