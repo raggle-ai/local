@@ -86,6 +86,7 @@ function normalizeRaggleProjectConfig(parsed) {
         ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
         ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
         ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
+        excludeFolders: normalizeIgnoredSubpaths(parsed.excludeFolders),
     };
 }
 /** Returns undefined when a generic file (like index.json) is not a raggle config. */

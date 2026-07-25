@@ -19,6 +19,8 @@ export type RaggleProjectConfig = {
   allSubpaths?: boolean;
   removePathFromName?: boolean;
   ignoredSubpaths?: string[];
+  /** Repository-root folders whose complete subtrees are excluded from discovery. */
+  excludeFolders?: string[];
 };
 
 export function normalizeIgnoredSubpaths(input: unknown, fallback: string[] = []) {
@@ -93,6 +95,7 @@ function normalizeRaggleProjectConfig(parsed: {
   allSubpaths?: unknown;
   removePathFromName?: unknown;
   ignoredSubpaths?: unknown;
+  excludeFolders?: unknown;
 }): RaggleProjectConfig {
   return {
     tags: normalizeTags(parsed.tags),
@@ -102,6 +105,7 @@ function normalizeRaggleProjectConfig(parsed: {
     ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
     ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
     ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
+    excludeFolders: normalizeIgnoredSubpaths(parsed.excludeFolders),
   };
 }
 

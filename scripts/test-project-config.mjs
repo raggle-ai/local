@@ -18,18 +18,27 @@ try {
   writeFileSync(
     path.join(worktree, "raggle.json"),
     `${JSON.stringify(
-      { schemaVersion: 1, name: "Raycast Essentials", tags: ["raycast"], allSubpaths: true },
+      {
+        schemaVersion: 1,
+        name: "Raycast Essentials",
+        tags: ["raycast"],
+        allSubpaths: true,
+        excludeFolders: ["scripts"],
+        subpaths: [{ path: "commands", allSubpath: true }],
+      },
       null,
       2,
     )}\n`,
   );
   mkdirSync(path.join(worktree, "commands"));
+  mkdirSync(path.join(worktree, "commands", "scripts"));
   mkdirSync(path.join(worktree, "scripts"));
 
   const config = readRaggleProjectConfig(worktree);
   assert.equal("name" in config, false);
   assert.deepEqual(config.tags, ["raycast"]);
   assert.equal(config.allSubpaths, true);
+  assert.deepEqual(config.excludeFolders, ["scripts"]);
 
   const repositories = loadImportedRepositoriesFromRows([
     { url: "https://github.com/anduimagui/raycast-essentials" },
@@ -53,9 +62,14 @@ try {
     projects.some((item) => item.relativePath === "commands"),
     "Expected allSubpaths to make an unlisted child folder searchable",
   );
-  assert.ok(
+  assert.equal(
     projects.some((item) => item.relativePath === "scripts"),
-    "Expected allSubpaths to include every eligible child folder",
+    false,
+    "Expected excludeFolders to hide the matching top-level folder",
+  );
+  assert.ok(
+    projects.some((item) => item.relativePath === "commands/scripts"),
+    "Expected excludeFolders to keep same-named folders below other top-level folders",
   );
 } finally {
   rmSync(cloneDirectory, { recursive: true, force: true });

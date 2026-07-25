@@ -257,6 +257,13 @@ function shouldIgnoreSubpath(relativePath: string | undefined, ignoredSubpaths: 
   });
 }
 
+function shouldExcludeTopLevelFolder(relativePath: string | undefined, excludeFolders: string[] = []) {
+  if (!relativePath || !excludeFolders.length) return false;
+
+  const [topLevelFolder] = normalizedSubpathPattern(relativePath).split("/");
+  return excludeFolders.some((item) => normalizedSubpathPattern(item).split("/")[0] === topLevelFolder);
+}
+
 function relativeSubpath(rootPath: string, worktree: string) {
   // Worktrees are constructed under rootPath in the hot paths, so slicing
   // avoids path.relative's double resolve.
@@ -590,6 +597,7 @@ async function loadResolvedLocalProjectSubpaths(
   const rootConfigResolution = await session.resolveConfig(localPath);
   const rootConfig = rootConfigResolution.config;
   const rootIgnoredSubpaths = mergeIgnoredSubpaths(options?.ignoredSubpaths, rootConfig.ignoredSubpaths);
+  const rootExcludedFolders = rootConfig.excludeFolders ?? [];
   const configuredFolderWorktrees = new Set(resolvedProject.configuredFolders.map((folder) => folder.worktree));
   // Custom marker files extend discovery to repositories that opted in with a
   // recognized root config file but did not set allSubpath or list the folders
@@ -631,7 +639,11 @@ async function loadResolvedLocalProjectSubpaths(
                 true,
                 cachedProjectsByWorktree.get(parentDirectory),
               ),
-            ].filter((project) => !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths));
+            ].filter(
+              (project) =>
+                !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths) &&
+                !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
+            );
 
       const childIgnoredSubpaths = mergeIgnoredSubpaths(options?.ignoredSubpaths, parentConfig.ignoredSubpaths);
       const childProjects = localFolderProjects
@@ -646,7 +658,11 @@ async function loadResolvedLocalProjectSubpaths(
             project,
           ),
         )
-        .filter((project) => !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths));
+        .filter(
+          (project) =>
+            !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths) &&
+            !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
+        );
 
       return [...parentProject, ...childProjects];
     }),
@@ -667,7 +683,11 @@ async function loadResolvedLocalProjectSubpaths(
             cachedProjectsByWorktree.get(worktree),
           );
         })
-        .filter((project) => !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths))
+        .filter(
+          (project) =>
+            !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths) &&
+            !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
+        )
     : [];
 
   return uniqueLocalProjectsByWorktree(

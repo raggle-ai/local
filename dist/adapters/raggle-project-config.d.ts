@@ -13,6 +13,8 @@ export type RaggleProjectConfig = {
     allSubpaths?: boolean;
     removePathFromName?: boolean;
     ignoredSubpaths?: string[];
+    /** Repository-root folders whose complete subtrees are excluded from discovery. */
+    excludeFolders?: string[];
 };
 export declare function normalizeIgnoredSubpaths(input: unknown, fallback?: string[]): string[];
 export declare function mergeIgnoredSubpaths(...inputs: Array<string[] | undefined>): string[];
