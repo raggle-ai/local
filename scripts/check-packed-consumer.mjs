@@ -31,6 +31,9 @@ try {
       "-e",
       `
         const pkg = require("@raggle-ai/local");
+        const fs = require("node:fs");
+        const os = require("node:os");
+        const path = require("node:path");
         const url = pkg.githubPullRequestsBrowserUrl(
           { owner: "raggle-ai", repo: "local", browserUrl: "https://github.com/raggle-ai/local" },
           ["alice", "bob"],
@@ -55,6 +58,19 @@ try {
           { allSubpaths: true },
         );
         if (merged.allSubpath !== true) throw new Error("allSubpaths alias was not included in the packed package");
+        const configDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "raggle-packed-config-"));
+        try {
+          fs.writeFileSync(
+            path.join(configDirectory, "raggle.json"),
+            JSON.stringify({ allSubpaths: true, excludeFolders: ["archive"] }),
+          );
+          const config = pkg.readRaggleProjectConfig(configDirectory);
+          if (config.excludeFolders?.[0] !== "archive") {
+            throw new Error("excludeFolders was not included in the packed package");
+          }
+        } finally {
+          fs.rmSync(configDirectory, { recursive: true, force: true });
+        }
         process.stdout.write(url);
       `,
     ],
