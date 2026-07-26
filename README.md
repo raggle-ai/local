@@ -100,9 +100,10 @@ await loadLocalProjects(projects, {
 Repository-local config contributes tags, folders, subpaths, and discovery settings. Project names remain sourced from the `RemoteProject` input so progressive updates use one stable name.
 
 Set `"allSubpaths": true` in a repository's `raggle.json` to make every eligible
-top-level folder searchable without listing each one in `subpaths`. The singular
-`allSubpath` spelling remains supported for compatibility. Explicit `subpaths`
-can still be used alongside it to expose selected folders one level deeper.
+top-level folder and its direct child folders searchable without listing each
+one in `subpaths`. The singular `allSubpath` spelling remains supported for
+compatibility. Explicit `subpaths` can still be used alongside it for deeper or
+more selective expansion.
 Use `"excludeFolders": ["archive", "private"]` to hide selected repository-root
 folders and their complete subtrees. Unlike `ignoredSubpaths`, these names only
 match the first folder in a relative project path.

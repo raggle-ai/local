@@ -604,13 +604,20 @@ async function loadResolvedLocalProjectSubpaths(
   // explicitly.
   const discoverRootSubpaths =
     repository.allSubpath || (hasCustomMarkers && rootConfigResolution.configPath !== undefined);
+  const rootAllSubpaths = repository.allSubpath
+    ? (await readTopLevelSubpathDirectories(session, localPath)).map((directory) => ({
+        path: relativeSubpath(localPath, directory),
+        allSubpath: true,
+        removePathFromName: resolvedProject.item.removePathFromName ?? false,
+      }))
+    : [];
   const rootDiscoveredSubpaths = discoverRootSubpaths
     ? await discoverConfigSubpaths(session, localPath, markerFiles, resolvedProject.item.removePathFromName ?? false)
     : [];
   const configuredSubpaths = await localConfigSubpaths(
     session,
     localPath,
-    [...rootDiscoveredSubpaths, ...repository.subpaths],
+    [...rootAllSubpaths, ...rootDiscoveredSubpaths, ...repository.subpaths],
     markerFiles,
   );
   const configuredSubpathGroups = await Promise.all(
@@ -668,32 +675,9 @@ async function loadResolvedLocalProjectSubpaths(
     }),
   );
   const configuredSubpathProjects = configuredSubpathGroups.flat();
-  const allSubpathProjects = repository.allSubpath
-    ? (await readTopLevelSubpathDirectories(session, localPath))
-        .map((worktree) => {
-          const relativePath = relativeSubpath(resolvedProject.item.repositoryRoot, worktree);
-
-          return subpathProject(
-            resolvedProject.item,
-            worktree,
-            relativePath,
-            resolvedProject.item.removePathFromName ?? false,
-            false,
-            false,
-            cachedProjectsByWorktree.get(worktree),
-          );
-        })
-        .filter(
-          (project) =>
-            !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths) &&
-            !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
-        )
-    : [];
 
   return uniqueLocalProjectsByWorktree(
-    [...configuredSubpathProjects, ...allSubpathProjects].filter(
-      (project) => !configuredFolderWorktrees.has(project.worktree),
-    ),
+    configuredSubpathProjects.filter((project) => !configuredFolderWorktrees.has(project.worktree)),
   );
 }
 

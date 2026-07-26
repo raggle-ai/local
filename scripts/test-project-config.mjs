@@ -24,7 +24,6 @@ try {
         tags: ["raycast"],
         allSubpaths: true,
         excludeFolders: ["scripts"],
-        subpaths: [{ path: "commands", allSubpath: true }],
       },
       null,
       2,
@@ -69,7 +68,7 @@ try {
   );
   assert.ok(
     projects.some((item) => item.relativePath === "commands/scripts"),
-    "Expected excludeFolders to keep same-named folders below other top-level folders",
+    "Expected allSubpaths to expand child folders and keep same-named folders below other top-level folders",
   );
 } finally {
   rmSync(cloneDirectory, { recursive: true, force: true });
