@@ -103,7 +103,8 @@ Set `"allSubpaths": true` in a repository's `raggle.json` to make every eligible
 top-level folder and its direct child folders searchable without listing each
 one in `subpaths`. The singular `allSubpath` spelling remains supported for
 compatibility. Explicit `subpaths` can still be used alongside it for deeper or
-more selective expansion.
+more selective expansion. A nested folder's `raggle.json` can also set
+`allSubpaths` to apply the same expansion relative to that folder.
 Use `"excludeFolders": ["archive", "private"]` to hide selected repository-root
 folders and their complete subtrees. Unlike `ignoredSubpaths`, these names only
 match the first folder in a relative project path.

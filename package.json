@@ -1,6 +1,6 @@
 {
   "name": "@raggle-ai/local",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Local project discovery and expansion logic for Raggle",
   "license": "MIT",
   "author": "Andrew Maguire",

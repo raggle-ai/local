@@ -31,6 +31,8 @@ try {
   );
   mkdirSync(path.join(worktree, "commands"));
   mkdirSync(path.join(worktree, "commands", "scripts"));
+  mkdirSync(path.join(worktree, "workspace", "apps", "web"), { recursive: true });
+  writeFileSync(path.join(worktree, "workspace", "raggle.json"), JSON.stringify({ allSubpaths: true }));
   mkdirSync(path.join(worktree, "scripts"));
 
   const config = readRaggleProjectConfig(worktree);
@@ -69,6 +71,10 @@ try {
   assert.ok(
     projects.some((item) => item.relativePath === "commands/scripts"),
     "Expected allSubpaths to expand child folders and keep same-named folders below other top-level folders",
+  );
+  assert.ok(
+    projects.some((item) => item.relativePath === "workspace/apps/web"),
+    "Expected allSubpaths in a nested folder config to expand that folder's direct child folders",
   );
 } finally {
   rmSync(cloneDirectory, { recursive: true, force: true });

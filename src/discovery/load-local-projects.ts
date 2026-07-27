@@ -356,7 +356,17 @@ async function localConfigSubpaths(
       if (!result) continue;
 
       const { parentSubpath, config, discoveredSubpaths } = result;
-      for (const childSubpath of [...(config.subpaths ?? []), ...discoveredSubpaths]) {
+      const allSubpaths =
+        config.allSubpath === true || config.allSubpaths === true
+          ? (await readTopLevelSubpathDirectories(session, subpathDirectory(rootPath, parentSubpath))).map(
+              (directory) => ({
+                path: relativeSubpath(subpathDirectory(rootPath, parentSubpath), directory),
+                allSubpath: true,
+                removePathFromName: config.removePathFromName ?? parentSubpath.removePathFromName,
+              }),
+            )
+          : [];
+      for (const childSubpath of [...(config.subpaths ?? []), ...allSubpaths, ...discoveredSubpaths]) {
         const childPath = nestedSubpathPath(parentSubpath.path, childSubpath.path);
         if (subpathsByPath.has(childPath)) continue;
 
