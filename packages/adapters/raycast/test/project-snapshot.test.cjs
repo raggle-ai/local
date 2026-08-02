@@ -3,11 +3,15 @@ const { mkdirSync, rmSync, writeFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const Module = require("node:module");
 
-const {
-  raggleProjectSnapshotPath,
-  readRaggleProjectSnapshot,
-} = require("../dist/project-snapshot");
+const originalLoad = Module._load;
+Module._load = (request, parent, isMain) => {
+  if (request === "@raycast/api") return { environment: { supportPath: "/tmp/raycast/extensions/test" } };
+  return originalLoad(request, parent, isMain);
+};
+const { raggleProjectSnapshotPath, readRaggleProjectSnapshot } = require("../dist/project-snapshot");
+Module._load = originalLoad;
 
 test("resolves the sibling Raggle extension snapshot", () => {
   const currentSupportPath = path.join("/tmp", "raycast", "extensions", "raycast-essentials");
