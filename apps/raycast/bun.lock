@@ -8,7 +8,7 @@
         "@ai-sdk/openai": "^3.0.48",
         "@libsql/client": "^0.17.3",
         "@raggle-ai/local": "0.3.1",
-        "@raggle-ai/raycast-adapter": "0.4.0",
+        "@raggle-ai/raycast-adapter": "0.5.0",
         "@raggle/plugins": "file:packages/plugins",
         "@raycast/api": "^1.94.0",
         "@raycast/utils": "^1.19.1",
@@ -191,7 +191,7 @@
 
     "@raggle-ai/local": ["@raggle-ai/local@0.3.1", "", {}, "sha512-KtySLRMvvNXYjGFpbd4ylrqxL8+phjDxFED2SKC0afh6WbthJ3hgIZg5njABpyhGGabhnmGeLOhXfGe6WbzGxQ=="],
 
-    "@raggle-ai/raycast-adapter": ["@raggle-ai/raycast-adapter@0.4.0", "", { "peerDependencies": { "@raggle-ai/local": ">=0.3.0", "@raycast/api": ">=1.94.0", "react": ">=18.0.0" } }, "sha512-YTCeDFRgfJI8ykRSHZbjuUtTlueT9gsUIv3EPPC7pkFO0B7z8LMhcRqNmRZirbUefrYuFh0ZxWr8//4OtOEyAg=="],
+    "@raggle-ai/raycast-adapter": ["@raggle-ai/raycast-adapter@0.5.0", "", { "peerDependencies": { "@raggle-ai/local": ">=0.3.0", "@raycast/api": ">=1.94.0", "react": ">=18.0.0" } }, "sha512-0PmNoWWEXv72oE1s0l6t2mP/UJ7ZnxIcQYMj8ON+/kFWtTs/uOx1MeU+wBcfksPTZpgpQhQ5hJ9+RD76C1fgcQ=="],
 
     "@raggle/plugins": ["@raggle/plugins@file:packages/plugins", {}],
 
