@@ -156,3 +156,34 @@ npm run publish:dry-run
 ```
 
 Publishing is handled from GitHub releases through npm trusted publishing. See `docs/publishing.md`.
+
+## Sharing Pi traces
+
+This repository can publish reviewed, redacted [Pi coding-agent](https://pi.dev/) sessions to the `raggle/local-pi-sessions` Hugging Face dataset with [`pi-share-hf`](https://github.com/badlogic/pi-share-hf).
+
+Install the local prerequisites once:
+
+```sh
+npm install -g pi-share-hf @mariozechner/pi-coding-agent
+brew install trufflehog
+```
+
+Initialize this repository's local review workspace once:
+
+```sh
+pi-share-hf init --repo local-pi-sessions --organization raggle
+```
+
+Pi only creates a trace after it is run from this repository. Start a normal session with `pi`, then collect and review it:
+
+```sh
+pi
+pi-share-hf collect --deny .pi/hf-deny.txt README.md
+pi-share-hf list --uploadable
+pi-share-hf grep -i 'private|secret|token|password|client|customer'
+pi-share-hf upload --dry-run
+```
+
+Create `.pi/hf-deny.txt` before collection with one case-sensitive regular expression per line for private project names, clients, people, or topics that must never be published. For known literal secrets not already present in `~/.zshrc`, create `.pi/hf-secrets.txt` with one value per line and add `--secret .pi/hf-secrets.txt` to `collect`. Both files and the generated `.pi/hf-sessions/` workspace are gitignored.
+
+Inspect every uploadable session and any extracted images before publishing. Reject a session with `pi-share-hf reject <session.jsonl>`, then publish the approved set with `pi-share-hf upload`.

@@ -1,0 +1,12 @@
+{
+  "subpaths": [
+    {
+      "path": "apps",
+      "allSubpath": true
+    },
+    {
+      "path": "packages/adapters",
+      "allSubpath": true
+    }
+  ]
+}

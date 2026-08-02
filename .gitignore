@@ -5,3 +5,8 @@ data/
 .env.*
 coverage/
 *.tsbuildinfo
+
+# Local Pi trace review workspace and uncommitted safety filters.
+.pi/hf-sessions/
+.pi/hf-deny.txt
+.pi/hf-secrets.txt

@@ -18,7 +18,7 @@ require.extensions[".ts"] = (module, fileName) => {
   module._compile(output, fileName);
 };
 
-const { discoverProjectIcon, fetchGithubOwnerIcon, githubOwnerFromRemoteUrl } = require("../src/lib/project-icons.ts");
+const { discoverProjectIcon, fetchGithubOwnerIcon, githubOwnerFromRemoteUrl } = require("@raggle-ai/local");
 
 function usage() {
   const script = path.relative(process.cwd(), __filename);
