@@ -40,6 +40,7 @@ export {
   mergeExistingSubpathSettings,
   upsertSubpathSettings,
   readSubpathChildDirectories,
+  shouldIncludeSubpathDirectory,
   type ProjectSubpathSettingsValues,
 } from "./project-subpaths";
 export { normalizeTags, normalizeFolders } from "./project-config-fields";

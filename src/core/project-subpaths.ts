@@ -103,7 +103,7 @@ export function upsertSubpathSettings(input: unknown, subpathPath: string, value
 }
 
 export function shouldIncludeSubpathDirectory(name: string) {
-  return !name.startsWith(".") && !skippedSubpathDirectories.has(name);
+  return !name.startsWith(".") && !name.startsWith("_") && !skippedSubpathDirectories.has(name);
 }
 
 export function readSubpathChildDirectories(parentDirectory: string) {

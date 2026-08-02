@@ -3,7 +3,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { repositoryCloneParentDirectory, repositoryRootPath } from "../adapters/add-project";
 import { repoPrefixedProjectName, subpathProjectName } from "../core/folder-mapping";
-import { type ImportedRepositorySubpath } from "../core/project-subpaths";
+import { shouldIncludeSubpathDirectory, type ImportedRepositorySubpath } from "../core/project-subpaths";
 import { normalizeRepositoryUrl, repositoryName } from "../adapters/git-repository";
 import { remoteToBrowserUrl } from "../core/project-remote";
 import {
@@ -276,17 +276,10 @@ function relativeSubpath(rootPath: string, worktree: string) {
   return path.relative(rootPath, worktree).split(path.sep).join("/");
 }
 
-function shouldIncludeAllSubpathDirectory(name: string) {
-  return (
-    !name.startsWith(".") &&
-    !["node_modules", "dist", "build", "coverage", ".next", ".turbo", ".vercel", "target"].includes(name)
-  );
-}
-
 async function readTopLevelSubpathDirectories(session: FsSession, rootPath: string) {
   const listing = await session.listDirectory(rootPath);
   return listing.directories
-    .filter((name) => shouldIncludeAllSubpathDirectory(name))
+    .filter((name) => shouldIncludeSubpathDirectory(name))
     .map((name) => rootPath + path.sep + name);
 }
 
@@ -559,7 +552,7 @@ async function readLocalFolderProjects(
   const listing = await session.listDirectory(folderPath);
 
   for (const name of listing.directories) {
-    if (name.startsWith(".")) continue;
+    if (!shouldIncludeSubpathDirectory(name)) continue;
     const worktree = folderPath + path.sep + name;
     const cached = cachedProjectsByWorktree?.get(worktree);
     const relatedIds = cached?.relatedIds ?? [worktree];
@@ -588,6 +581,20 @@ async function readLocalFolderProjects(
   }
 
   return items;
+}
+
+async function inheritedIgnoredSubpaths(
+  session: FsSession,
+  rootPath: string,
+  relativePath: string,
+  rootIgnoredSubpaths: string[],
+) {
+  const segments = relativePath === "." ? [] : relativePath.split("/");
+  const configs = await Promise.all(
+    segments.map((_, index) => session.readConfig(path.join(rootPath, ...segments.slice(0, index + 1)))),
+  );
+
+  return mergeIgnoredSubpaths(rootIgnoredSubpaths, ...configs.map((config) => config.ignoredSubpaths));
 }
 
 async function loadResolvedLocalProjectSubpaths(
@@ -636,11 +643,11 @@ async function loadResolvedLocalProjectSubpaths(
       const removePathFromName = subpath.removePathFromName ?? resolvedProject.item.removePathFromName ?? false;
       const includeChildSubpaths = subpath.allSubpath ?? true;
       const parentExists = session.pathExists(parentDirectory);
-      const [parentConfig, localFolderProjects] = await Promise.all([
-        session.readConfig(parentDirectory),
+      const [localFolderProjects, inheritedIgnored] = await Promise.all([
         includeChildSubpaths
           ? readLocalFolderProjects(session, parentDirectory, cachedProjectsByWorktree)
           : Promise.resolve([]),
+        inheritedIgnoredSubpaths(session, localPath, subpath.path, rootIgnoredSubpaths),
       ]);
 
       const parentProject =
@@ -658,11 +665,10 @@ async function loadResolvedLocalProjectSubpaths(
               ),
             ].filter(
               (project) =>
-                !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths) &&
+                !shouldIgnoreSubpath(project.relativePath, inheritedIgnored) &&
                 !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
             );
 
-      const childIgnoredSubpaths = mergeIgnoredSubpaths(options?.ignoredSubpaths, parentConfig.ignoredSubpaths);
       const childProjects = localFolderProjects
         .map((project) =>
           subpathProject(
@@ -677,7 +683,7 @@ async function loadResolvedLocalProjectSubpaths(
         )
         .filter(
           (project) =>
-            !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths) &&
+            !shouldIgnoreSubpath(project.relativePath, inheritedIgnored) &&
             !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders),
         );
 

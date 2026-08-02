@@ -10,6 +10,7 @@ const promises_1 = require("node:fs/promises");
 const node_path_1 = __importDefault(require("node:path"));
 const add_project_1 = require("../adapters/add-project");
 const folder_mapping_1 = require("../core/folder-mapping");
+const project_subpaths_1 = require("../core/project-subpaths");
 const git_repository_1 = require("../adapters/git-repository");
 const project_remote_1 = require("../core/project-remote");
 const raggle_project_config_1 = require("../adapters/raggle-project-config");
@@ -216,14 +217,10 @@ function relativeSubpath(rootPath, worktree) {
     }
     return node_path_1.default.relative(rootPath, worktree).split(node_path_1.default.sep).join("/");
 }
-function shouldIncludeAllSubpathDirectory(name) {
-    return (!name.startsWith(".") &&
-        !["node_modules", "dist", "build", "coverage", ".next", ".turbo", ".vercel", "target"].includes(name));
-}
 async function readTopLevelSubpathDirectories(session, rootPath) {
     const listing = await session.listDirectory(rootPath);
     return listing.directories
-        .filter((name) => shouldIncludeAllSubpathDirectory(name))
+        .filter((name) => (0, project_subpaths_1.shouldIncludeSubpathDirectory)(name))
         .map((name) => rootPath + node_path_1.default.sep + name);
 }
 function subpathDirectory(rootPath, subpath) {
@@ -432,7 +429,7 @@ async function readLocalFolderProjects(session, folderPath, cachedProjectsByWork
     const items = [];
     const listing = await session.listDirectory(folderPath);
     for (const name of listing.directories) {
-        if (name.startsWith("."))
+        if (!(0, project_subpaths_1.shouldIncludeSubpathDirectory)(name))
             continue;
         const worktree = folderPath + node_path_1.default.sep + name;
         const cached = cachedProjectsByWorktree?.get(worktree);
@@ -461,6 +458,11 @@ async function readLocalFolderProjects(session, folderPath, cachedProjectsByWork
         });
     }
     return items;
+}
+async function inheritedIgnoredSubpaths(session, rootPath, relativePath, rootIgnoredSubpaths) {
+    const segments = relativePath === "." ? [] : relativePath.split("/");
+    const configs = await Promise.all(segments.map((_, index) => session.readConfig(node_path_1.default.join(rootPath, ...segments.slice(0, index + 1)))));
+    return (0, raggle_project_config_1.mergeIgnoredSubpaths)(rootIgnoredSubpaths, ...configs.map((config) => config.ignoredSubpaths));
 }
 async function loadResolvedLocalProjectSubpaths(session, resolvedProject, repository, cachedProjectsByWorktree, markerFiles, options) {
     const hasCustomMarkers = Boolean(options?.subpathMarkerFiles?.length);
@@ -493,22 +495,21 @@ async function loadResolvedLocalProjectSubpaths(session, resolvedProject, reposi
         const removePathFromName = subpath.removePathFromName ?? resolvedProject.item.removePathFromName ?? false;
         const includeChildSubpaths = subpath.allSubpath ?? true;
         const parentExists = session.pathExists(parentDirectory);
-        const [parentConfig, localFolderProjects] = await Promise.all([
-            session.readConfig(parentDirectory),
+        const [localFolderProjects, inheritedIgnored] = await Promise.all([
             includeChildSubpaths
                 ? readLocalFolderProjects(session, parentDirectory, cachedProjectsByWorktree)
                 : Promise.resolve([]),
+            inheritedIgnoredSubpaths(session, localPath, subpath.path, rootIgnoredSubpaths),
         ]);
         const parentProject = subpath.path === "." || configuredFolderWorktrees.has(parentDirectory) || !parentExists
             ? []
             : [
                 subpathProject(resolvedProject.item, parentDirectory, subpath.path, removePathFromName, includeChildSubpaths, true, cachedProjectsByWorktree.get(parentDirectory)),
-            ].filter((project) => !shouldIgnoreSubpath(project.relativePath, rootIgnoredSubpaths) &&
+            ].filter((project) => !shouldIgnoreSubpath(project.relativePath, inheritedIgnored) &&
                 !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders));
-        const childIgnoredSubpaths = (0, raggle_project_config_1.mergeIgnoredSubpaths)(options?.ignoredSubpaths, parentConfig.ignoredSubpaths);
         const childProjects = localFolderProjects
             .map((project) => subpathProject(resolvedProject.item, project.worktree, node_path_1.default.basename(project.worktree), removePathFromName, false, false, project))
-            .filter((project) => !shouldIgnoreSubpath(project.relativePath, childIgnoredSubpaths) &&
+            .filter((project) => !shouldIgnoreSubpath(project.relativePath, inheritedIgnored) &&
             !shouldExcludeTopLevelFolder(project.relativePath, rootExcludedFolders));
         return [...parentProject, ...childProjects];
     }));

@@ -7,6 +7,7 @@ import {
   fetchGithubOwnerIcon,
   githubOwnerFromRemoteUrl,
   projectIconExtensions,
+  shouldIncludeSubpathDirectory,
 } from "@raggle-ai/local";
 import { extensionPaths } from "./config";
 import { listVisibleProjects, saveProjectIcon as saveProjectIconToDb, type VisibleProjectRow } from "@raggle-ai/local";
@@ -385,7 +386,7 @@ export function readLocalFolderProjects(folderPath: string) {
 
   try {
     for (const entry of readdirSync(folderPath, { withFileTypes: true })) {
-      if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+      if (!entry.isDirectory() || !shouldIncludeSubpathDirectory(entry.name)) continue;
       const worktree = path.join(folderPath, entry.name);
       items.push(localFolderEntryToProject(worktree, favorites, cachedProjectsByWorktree.get(worktree)));
     }

@@ -23,6 +23,7 @@ try {
         name: "Raycast Essentials",
         tags: ["raycast"],
         allSubpaths: true,
+        ignoredSubpaths: ["cache"],
         excludeFolders: ["scripts"],
       },
       null,
@@ -31,19 +32,25 @@ try {
   );
   mkdirSync(path.join(worktree, "commands"));
   mkdirSync(path.join(worktree, "commands", "scripts"));
+  mkdirSync(path.join(worktree, "commands", "cache"));
+  mkdirSync(path.join(worktree, "__pycache__"));
+  mkdirSync(path.join(worktree, "_generated"));
   mkdirSync(path.join(worktree, "workspace", "apps", "web"), { recursive: true });
-  writeFileSync(path.join(worktree, "workspace", "raggle.json"), JSON.stringify({ allSubpaths: true }));
+  mkdirSync(path.join(worktree, "workspace", "apps", "generated"));
+  writeFileSync(
+    path.join(worktree, "workspace", "raggle.json"),
+    JSON.stringify({ allSubpaths: true, ignoredSubpaths: ["generated"] }),
+  );
   mkdirSync(path.join(worktree, "scripts"));
 
   const config = readRaggleProjectConfig(worktree);
   assert.equal("name" in config, false);
   assert.deepEqual(config.tags, ["raycast"]);
   assert.equal(config.allSubpaths, true);
+  assert.deepEqual(config.ignoredSubpaths, ["cache"]);
   assert.deepEqual(config.excludeFolders, ["scripts"]);
 
-  const repositories = loadImportedRepositoriesFromRows([
-    { url: "https://github.com/anduimagui/raycast-essentials" },
-  ]);
+  const repositories = loadImportedRepositoriesFromRows([{ url: "https://github.com/anduimagui/raycast-essentials" }]);
   const updateNames = [];
   const projects = await loadLocalProjects(repositories, {
     cloneDirectory,
@@ -72,9 +79,24 @@ try {
     projects.some((item) => item.relativePath === "commands/scripts"),
     "Expected allSubpaths to expand child folders and keep same-named folders below other top-level folders",
   );
+  assert.equal(
+    projects.some((item) => item.relativePath === "commands/cache"),
+    false,
+    "Expected root ignoredSubpaths to apply inside nested allSubpaths folders",
+  );
+  assert.equal(
+    projects.some((item) => item.relativePath?.split("/").some((segment) => segment.startsWith("_"))),
+    false,
+    "Expected internal and cache directories to be excluded from automatic discovery",
+  );
   assert.ok(
     projects.some((item) => item.relativePath === "workspace/apps/web"),
     "Expected allSubpaths in a nested folder config to expand that folder's direct child folders",
+  );
+  assert.equal(
+    projects.some((item) => item.relativePath === "workspace/apps/generated"),
+    false,
+    "Expected nested ignoredSubpaths to apply throughout that config's subtree",
   );
 } finally {
   rmSync(cloneDirectory, { recursive: true, force: true });

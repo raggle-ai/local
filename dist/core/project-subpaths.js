@@ -96,7 +96,7 @@ function upsertSubpathSettings(input, subpathPath, values) {
     return nextSubpaths;
 }
 function shouldIncludeSubpathDirectory(name) {
-    return !name.startsWith(".") && !skippedSubpathDirectories.has(name);
+    return !name.startsWith(".") && !name.startsWith("_") && !skippedSubpathDirectories.has(name);
 }
 function readSubpathChildDirectories(parentDirectory) {
     const items = new Set();
