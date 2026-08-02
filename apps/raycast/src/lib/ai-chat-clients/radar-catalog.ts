@@ -45,9 +45,11 @@ const radarApplicationSchema = z.object({
 
 const radarResponseSchema = z.object({
   collections: z.object({
-    applications: z.array(radarApplicationSchema),
+    applications: z.array(z.unknown()),
   }),
 });
+
+const radarApplicationSlugSchema = z.object({ slug: z.string() });
 
 type RadarApplicationLoaderOptions = {
   expectedSlugs: readonly AiChatClientId[];
@@ -75,7 +77,15 @@ export async function fetchRadarCatalogWithTimeout<T>(
 
 export function parseRadarApplications(catalog: unknown, expectedSlugs: readonly AiChatClientId[]): RadarApplication[] {
   const response = radarResponseSchema.parse(catalog);
-  const bySlug = new Map(response.collections.applications.map((application) => [application.slug, application]));
+  const expectedSlugSet = new Set<string>(expectedSlugs);
+  const bySlug = new Map<string, z.infer<typeof radarApplicationSchema>>();
+
+  for (const value of response.collections.applications) {
+    const slugResult = radarApplicationSlugSchema.safeParse(value);
+    if (!slugResult.success || !expectedSlugSet.has(slugResult.data.slug)) continue;
+    const application = radarApplicationSchema.parse(value);
+    bySlug.set(application.slug, application);
+  }
   const missingSlugs = expectedSlugs.filter((slug) => !bySlug.has(slug));
 
   if (missingSlugs.length) {

@@ -33,7 +33,15 @@ function application(slug: (typeof expectedSlugs)[number]) {
 
 const liveResponse = {
   collections: {
-    applications: [application("pible"), { ...application("codex"), slug: "not-an-ai-client" }, ...expectedSlugs.map(application)],
+    applications: [
+      application("pible"),
+      {
+        ...application("codex"),
+        slug: "not-an-ai-client",
+        deeplinks: [{ id: "generic", label: "Generic", urlTemplate: "example://generic" }],
+      },
+      ...expectedSlugs.map(application),
+    ],
   },
 };
 
