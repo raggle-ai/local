@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { loadImportedRepositoriesFromRows } from "../src/lib/import";
-import { readSubpathChildDirectories } from "../src/lib/project-subpaths";
-import { mergeRaggleProjectConfig, readRaggleProjectConfig } from "../src/lib/raggle-project-config";
+import {
+  loadImportedRepositoriesFromRows,
+  mergeRaggleProjectConfig,
+  readRaggleProjectConfig,
+  readSubpathChildDirectories,
+} from "@raggle-ai/local";
 
 const defaultRemoteUrl = "https://gitlab.com/baker-street/cdp-index.git";
 const expectedSubpaths = ["connectors", "projects", "partners"];

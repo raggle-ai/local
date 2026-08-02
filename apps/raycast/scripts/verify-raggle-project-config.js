@@ -5,7 +5,7 @@ const { rmSync } = require("node:fs");
 const path = require("node:path");
 
 const outputDirectory = path.join(".tmp", "raggle-project-config-verify");
-const compiledVerifier = path.join(outputDirectory, "scripts", "verify-raggle-project-config.js");
+const compiledVerifier = path.join(outputDirectory, "verify-raggle-project-config.js");
 
 try {
   rmSync(outputDirectory, { recursive: true, force: true });

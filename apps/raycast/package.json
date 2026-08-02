@@ -159,7 +159,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.48",
     "@libsql/client": "^0.17.3",
-    "@raggle-ai/local": "0.3.1",
+    "@raggle-ai/local": "0.3.2",
     "@raggle-ai/raycast-adapter": "0.5.0",
     "@raggle/plugins": "file:packages/plugins",
     "@raycast/api": "^1.94.0",
