@@ -100,7 +100,10 @@ export function localProjectToRaycastProject(project: LocalProject): RaycastProj
 export { ProjectPicker, type ProjectPickerProps } from "./project-picker";
 export {
   raggleProjectSnapshotPath,
+  readRaggleProjectListSnapshot,
   readRaggleProjectSnapshot,
+  type RaggleProjectListSnapshot,
+  type RaggleProjectListState,
   type RaggleProjectSnapshotOptions,
 } from "./project-snapshot";
 

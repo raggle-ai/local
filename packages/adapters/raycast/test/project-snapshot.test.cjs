@@ -10,7 +10,11 @@ Module._load = (request, parent, isMain) => {
   if (request === "@raycast/api") return { environment: { supportPath: "/tmp/raycast/extensions/test" } };
   return originalLoad(request, parent, isMain);
 };
-const { raggleProjectSnapshotPath, readRaggleProjectSnapshot } = require("../dist/project-snapshot");
+const {
+  raggleProjectSnapshotPath,
+  readRaggleProjectListSnapshot,
+  readRaggleProjectSnapshot,
+} = require("../dist/project-snapshot");
 Module._load = originalLoad;
 
 test("resolves the sibling Raggle extension snapshot", () => {
@@ -20,6 +24,52 @@ test("resolves the sibling Raggle extension snapshot", () => {
     raggleProjectSnapshotPath({ currentSupportPath }),
     path.join("/tmp", "raycast", "extensions", "raggle", "standard-projects-snapshot.json"),
   );
+});
+
+test("applies shared favorite and recent-selection ordering", () => {
+  const fixturePath = path.join(tmpdir(), `raggle-project-list-state-${process.pid}`, "snapshot.json");
+  const project = (id) => ({
+    id,
+    worktree: `/tmp/${id}`,
+    remoteUrl: `https://github.com/raggle-ai/${id}`,
+    repositoryRoot: `/tmp/${id}`,
+    sandboxCount: 0,
+    hasIcon: false,
+    isSessionOnly: false,
+    isFavorite: false,
+    relatedIds: [],
+    isCloned: true,
+  });
+  mkdirSync(path.dirname(fixturePath), { recursive: true });
+  writeFileSync(
+    fixturePath,
+    JSON.stringify({
+      schemaVersion: 2,
+      generatedAt: 123,
+      items: [project("one"), project("two"), project("three")],
+      listState: {
+        favoriteWorktrees: ["/tmp/two"],
+        recentSelectionWorktrees: ["/tmp/three", "/tmp/one"],
+        updatedAt: 456,
+      },
+    }),
+  );
+
+  try {
+    const snapshot = readRaggleProjectListSnapshot({ snapshotPath: fixturePath });
+    assert.equal(snapshot.schemaVersion, 2);
+    assert.equal(snapshot.generatedAt, 123);
+    assert.deepEqual(
+      snapshot.projects.map(({ worktree, isFavorite }) => ({ worktree, isFavorite })),
+      [
+        { worktree: "/tmp/two", isFavorite: true },
+        { worktree: "/tmp/three", isFavorite: false },
+        { worktree: "/tmp/one", isFavorite: false },
+      ],
+    );
+  } finally {
+    rmSync(path.dirname(fixturePath), { recursive: true });
+  }
 });
 
 test("reads validated projects from the snapshot", () => {

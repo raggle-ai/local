@@ -212,6 +212,8 @@ type UseEnhancedListFavouritesOptions<T> = {
 
 type UseEnhancedListFavouritesResult<T> = {
   favourites: string[];
+  recentSelections: string[];
+  isLoading: boolean;
   pendingFavouriteKeys: string[];
   orderedFavourites: T[];
   nonFavourites: T[];
@@ -230,11 +232,12 @@ export function useEnhancedListFavourites<T>(
   { storageKey, getItemKey, initialFavourites }: UseEnhancedListFavouritesOptions<T>,
 ): UseEnhancedListFavouritesResult<T> {
   const migratedInitialFavourites = useRef(false);
-  const { value, setValue } = useLocalStorage<string[]>(storageKey, []);
-  const { value: recentSelections, setValue: setRecentSelections } = useLocalStorage<string[]>(
-    `${storageKey}-recent-selections`,
-    [],
-  );
+  const { value, setValue, isLoading: favouritesLoading } = useLocalStorage<string[]>(storageKey, []);
+  const {
+    value: recentSelections,
+    setValue: setRecentSelections,
+    isLoading: recentSelectionsLoading,
+  } = useLocalStorage<string[]>(`${storageKey}-recent-selections`, []);
   const favourites = value ?? [];
   const recentSelectionOrder = recentSelections ?? [];
 
@@ -334,6 +337,8 @@ export function useEnhancedListFavourites<T>(
 
   return {
     favourites,
+    recentSelections: recentSelectionOrder,
+    isLoading: favouritesLoading || recentSelectionsLoading,
     pendingFavouriteKeys,
     orderedFavourites,
     nonFavourites,

@@ -29,5 +29,5 @@ export declare function iconColorFromRaycastTint(tint?: RaycastProjectColor): st
 export declare function cachedRaycastProjectToLocalProject(project: RaycastCachedProject): LocalProject;
 export declare function localProjectToRaycastProject(project: LocalProject): RaycastProject;
 export { ProjectPicker, type ProjectPickerProps } from "./project-picker";
-export { raggleProjectSnapshotPath, readRaggleProjectSnapshot, type RaggleProjectSnapshotOptions, } from "./project-snapshot";
+export { raggleProjectSnapshotPath, readRaggleProjectListSnapshot, readRaggleProjectSnapshot, type RaggleProjectListSnapshot, type RaggleProjectListState, type RaggleProjectSnapshotOptions, } from "./project-snapshot";
 export * from "./project-search";

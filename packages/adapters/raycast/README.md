@@ -8,7 +8,8 @@ Raycast components and conversion utilities for Raggle local projects.
 Raggle Raycast extension. Open Raggle once before using a consuming command so the
 snapshot exists and is current. The list displays its project count in the section
 title and supports indexed search across project names, repositories, keywords,
-session titles, and GitHub owners.
+session titles, and GitHub owners. Versioned snapshot metadata keeps favorite
+ordering and recent project ordering consistent with the Raggle project list.
 
 ```tsx
 import { ProjectPicker } from "@raggle-ai/raycast-adapter";

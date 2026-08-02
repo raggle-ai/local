@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.readRaggleProjectSnapshot = exports.raggleProjectSnapshotPath = exports.ProjectPicker = void 0;
+exports.readRaggleProjectSnapshot = exports.readRaggleProjectListSnapshot = exports.raggleProjectSnapshotPath = exports.ProjectPicker = void 0;
 exports.raycastTintFromIconColor = raycastTintFromIconColor;
 exports.iconColorFromRaycastTint = iconColorFromRaycastTint;
 exports.cachedRaycastProjectToLocalProject = cachedRaycastProjectToLocalProject;
@@ -95,5 +95,6 @@ var project_picker_1 = require("./project-picker");
 Object.defineProperty(exports, "ProjectPicker", { enumerable: true, get: function () { return project_picker_1.ProjectPicker; } });
 var project_snapshot_1 = require("./project-snapshot");
 Object.defineProperty(exports, "raggleProjectSnapshotPath", { enumerable: true, get: function () { return project_snapshot_1.raggleProjectSnapshotPath; } });
+Object.defineProperty(exports, "readRaggleProjectListSnapshot", { enumerable: true, get: function () { return project_snapshot_1.readRaggleProjectListSnapshot; } });
 Object.defineProperty(exports, "readRaggleProjectSnapshot", { enumerable: true, get: function () { return project_snapshot_1.readRaggleProjectSnapshot; } });
 __exportStar(require("./project-search"), exports);

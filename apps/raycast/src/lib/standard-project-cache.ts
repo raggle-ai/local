@@ -42,10 +42,18 @@ export type StandardProjectSnapshotItem = {
 };
 
 type StandardProjectsSnapshot = {
+  schemaVersion?: number;
   sourceFile: string;
   sourceMtimeMs?: number;
   generatedAt: number;
   items: StandardProjectSnapshotItem[];
+  listState?: StandardProjectListSnapshotState;
+};
+
+export type StandardProjectListSnapshotState = {
+  favoriteWorktrees: string[];
+  recentSelectionWorktrees: string[];
+  updatedAt: number;
 };
 
 let standardProjectsMemoryCache: StandardProjectsSnapshot | undefined;
@@ -114,15 +122,36 @@ export function readLastStandardProjectsSnapshot(filePath: string) {
 
 export function writeStandardProjectsSnapshot(filePath: string, items: StandardProjectSnapshotItem[]) {
   const mtimeMs = sourceMtimeMs(filePath);
+  const storedSnapshot = readStoredStandardProjectsSnapshot();
 
   const snapshot: StandardProjectsSnapshot = {
+    schemaVersion: 2,
     sourceFile: filePath,
     sourceMtimeMs: mtimeMs,
     generatedAt: Date.now(),
     items,
+    listState: storedSnapshot?.listState,
   };
 
   writeJsonFile(paths.standardProjectsSnapshotPath, snapshot);
   standardProjectsMemoryCache = snapshot;
   return snapshot;
+}
+
+export function writeStandardProjectListState(listState: Omit<StandardProjectListSnapshotState, "updatedAt">) {
+  const snapshot = readStoredStandardProjectsSnapshot();
+  if (!snapshot || !Array.isArray(snapshot.items)) return undefined;
+
+  const nextSnapshot: StandardProjectsSnapshot = {
+    ...snapshot,
+    schemaVersion: 2,
+    listState: {
+      ...listState,
+      updatedAt: Date.now(),
+    },
+  };
+
+  writeJsonFile(paths.standardProjectsSnapshotPath, nextSnapshot);
+  standardProjectsMemoryCache = nextSnapshot;
+  return nextSnapshot;
 }

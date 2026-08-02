@@ -83,6 +83,7 @@ import {
 import {
   readLastStandardProjectsSnapshot,
   readStandardProjectsSnapshot,
+  writeStandardProjectListState,
   writeStandardProjectsSnapshot,
 } from "./lib/standard-project-cache";
 import {
@@ -234,6 +235,14 @@ export default function Command() {
     getItemKey: getProjectItemKey,
     initialFavourites: legacyFavorites,
   });
+
+  useEffect(() => {
+    if (favouriteState.isLoading || state.items.length === 0) return;
+    writeStandardProjectListState({
+      favoriteWorktrees: favouriteState.favourites,
+      recentSelectionWorktrees: favouriteState.recentSelections,
+    });
+  }, [favouriteState.favourites, favouriteState.isLoading, favouriteState.recentSelections, state.items.length]);
 
   // Set up fuzzy search filtering
   const allDisplayItems = useMemo(
