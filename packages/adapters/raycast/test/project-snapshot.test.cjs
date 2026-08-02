@@ -7,7 +7,7 @@ const test = require("node:test");
 const {
   raggleProjectSnapshotPath,
   readRaggleProjectSnapshot,
-} = require("../dist");
+} = require("../dist/project-snapshot");
 
 test("resolves the sibling Raggle extension snapshot", () => {
   const currentSupportPath = path.join("/tmp", "raycast", "extensions", "raycast-essentials");
