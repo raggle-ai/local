@@ -1,0 +1,16 @@
+export { searchIndexedItems, type IndexedSearchCache, type IndexedSearchOptions } from "./indexed-search";
+export {
+  buildProjectSearchIndex,
+  evaluateProjectSearchEntry,
+  parseProjectSearch,
+  projectSearchCanNarrow,
+  projectSearchEntryMatches,
+  projectSearchEntryScore,
+  projectUsernameListItems,
+  searchProjects,
+  type ProjectSearchIndexEntry,
+  type ProjectSearchIndexOptions,
+  type ParsedProjectSearch,
+  type ProjectUsernameListItem,
+  type SearchableProject,
+} from "./project-search";

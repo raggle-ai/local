@@ -1,0 +1,44 @@
+{
+  "name": "@raggle-ai/raycast-adapter",
+  "version": "0.4.0",
+  "description": "Raycast adapter utilities for Raggle local projects",
+  "license": "MIT",
+  "author": "Andrew Maguire",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "fix-lint": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "test": "npm run build && node --test test/*.test.cjs"
+  },
+  "peerDependencies": {
+    "@raggle-ai/local": ">=0.3.0",
+    "@raycast/api": ">=1.94.0",
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@raggle-ai/local": "file:../../..",
+    "@raycast/api": "^1.94.0",
+    "@types/react": "^19.0.12",
+    "prettier": "^3.5.3",
+    "react": "^19.0.0",
+    "typescript": "^5.8.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

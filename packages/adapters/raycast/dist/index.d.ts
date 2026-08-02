@@ -1,0 +1,33 @@
+import { Color } from "@raycast/api";
+import type { LocalProject } from "@raggle-ai/local";
+export type RaycastProjectColor = Color;
+export type RaycastProject = Omit<LocalProject, "tint"> & {
+    tint?: RaycastProjectColor;
+};
+export type RaycastCachedProject = {
+    id: string;
+    worktree: string;
+    name?: string;
+    description?: string;
+    worktreeName?: string;
+    keywords?: string[];
+    tags?: string[];
+    latestSessionTitle?: string;
+    icon?: string;
+    iconColor?: string;
+    tint?: RaycastProjectColor;
+    startupCommand?: string;
+    sandboxCount: number;
+    updatedAt?: number;
+    hasIcon: boolean;
+    isSessionOnly?: boolean;
+    isFavorite?: boolean;
+    relatedIds?: string[];
+};
+export declare function raycastTintFromIconColor(iconColor?: string | null): RaycastProjectColor | undefined;
+export declare function iconColorFromRaycastTint(tint?: RaycastProjectColor): string | undefined;
+export declare function cachedRaycastProjectToLocalProject(project: RaycastCachedProject): LocalProject;
+export declare function localProjectToRaycastProject(project: LocalProject): RaycastProject;
+export { ProjectPicker, type ProjectPickerProps } from "./project-picker";
+export { raggleProjectSnapshotPath, readRaggleProjectSnapshot, type RaggleProjectSnapshotOptions, } from "./project-snapshot";
+export * from "./project-search";

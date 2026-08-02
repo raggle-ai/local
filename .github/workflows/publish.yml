@@ -23,7 +23,8 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@latest
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run build
-      - run: npm publish --access public --provenance
+      - run: npm run typecheck:all
+      - run: npm run lint:all
+      - run: npm run build:all
+      - run: npm run test:all
+      - run: npm run publish:all
