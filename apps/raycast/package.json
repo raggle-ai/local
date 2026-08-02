@@ -1,0 +1,208 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "raggle",
+  "title": "Raggle",
+  "description": "Browse, clone, and open standard projects",
+  "icon": "command-icon.png",
+  "license": "MIT",
+  "author": "raggle-devs",
+  "categories": [
+    "Productivity",
+    "Developer Tools"
+  ],
+  "commands": [
+    {
+      "name": "projects",
+      "title": "Projects",
+      "description": "Browse, clone, and open standard projects",
+      "mode": "view",
+      "sourcePath": "src/projects.tsx",
+      "icon": "command-icon.png",
+      "preferences": [
+        {
+          "name": "projectSource",
+          "type": "dropdown",
+          "required": true,
+          "title": "Project Source",
+          "description": "Where project repositories are loaded from",
+          "default": "json-file",
+          "data": [
+            {
+              "title": "JSON File",
+              "value": "json-file"
+            },
+            {
+              "title": "Turso/libSQL",
+              "value": "turso"
+            }
+          ]
+        },
+        {
+          "name": "cloneDirectory",
+          "type": "directory",
+          "required": true,
+          "title": "Clone Directory",
+          "description": "Directory where repositories should be cloned",
+          "placeholder": "~/src"
+        },
+        {
+          "name": "projectActionsDirectory",
+          "type": "directory",
+          "required": false,
+          "title": "Project Actions Folder",
+          "description": "Folder containing a plugins directory or project actions plugin",
+          "placeholder": "~/path/to/project-config"
+        },
+        {
+          "name": "openInTarget",
+          "type": "dropdown",
+          "required": true,
+          "title": "Open In",
+          "description": "Default app used when opening a project",
+          "default": "opencode",
+          "data": [
+            {
+              "title": "OpenCode",
+              "value": "opencode"
+            },
+            {
+              "title": "VSCodium",
+              "value": "vscodium"
+            },
+            {
+              "title": "Codex",
+              "value": "codex"
+            },
+            {
+              "title": "T3 Code",
+              "value": "t3-code"
+            },
+            {
+              "title": "Claude Code",
+              "value": "claude"
+            },
+            {
+              "title": "Devin",
+              "value": "devin"
+            },
+            {
+              "title": "Pible",
+              "value": "pible"
+            },
+            {
+              "title": "VS Code",
+              "value": "vscode"
+            },
+            {
+              "title": "Cursor",
+              "value": "cursor"
+            },
+            {
+              "title": "Windsurf",
+              "value": "windsurf"
+            },
+            {
+              "title": "Zed",
+              "value": "zed"
+            },
+            {
+              "title": "Sublime Text",
+              "value": "sublime"
+            },
+            {
+              "title": "BBEdit",
+              "value": "bbedit"
+            },
+            {
+              "title": "Nova",
+              "value": "nova"
+            },
+            {
+              "title": "WebStorm",
+              "value": "webstorm"
+            },
+            {
+              "title": "IntelliJ IDEA",
+              "value": "intellij"
+            },
+            {
+              "title": "iTerm2",
+              "value": "iterm2"
+            }
+          ]
+        },
+        {
+          "name": "tursoDatabaseUrl",
+          "type": "textfield",
+          "required": false,
+          "title": "Turso Database",
+          "description": "libSQL database URL when Project Source is Turso/libSQL",
+          "placeholder": "libsql://..."
+        },
+        {
+          "name": "tursoAuthToken",
+          "type": "password",
+          "required": false,
+          "title": "Turso API Token",
+          "description": "Database auth token for private Turso databases"
+        }
+      ],
+      "keywords": [
+        "projects",
+        "repositories",
+        "git",
+        "clone",
+        "open"
+      ]
+    }
+  ],
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.48",
+    "@libsql/client": "^0.17.3",
+    "@raggle-ai/local": "0.3.1",
+    "@raggle-ai/raycast-adapter": "0.4.0",
+    "@raggle/plugins": "file:packages/plugins",
+    "@raycast/api": "^1.94.0",
+    "@raycast/utils": "^1.19.1",
+    "ai": "^6.0.141",
+    "raycast-list-favourites": "^0.1.0",
+    "typescript": "^5.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.0.4",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.12",
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3"
+  },
+  "overrides": {
+    "esbuild": "0.28.1",
+    "brace-expansion": "5.0.8"
+  },
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build -e dist",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "typecheck": "tsc --noEmit",
+    "check:project-icons": "node scripts/check-project-icons.js",
+    "check:project-remote": "node scripts/check-project-remote.js",
+    "list:project-subpath-markers": "node scripts/list-project-subpath-markers.js",
+    "verify:enhanced-list-order": "node --experimental-strip-types scripts/verify-enhanced-list-order.ts",
+    "verify:stable-project-order": "node --experimental-strip-types scripts/verify-stable-project-order.ts",
+    "verify:project-search": "esbuild scripts/verify-project-search.ts --bundle --platform=node --format=cjs --outfile=/tmp/raggle-project-search-test.cjs && node /tmp/raggle-project-search-test.cjs",
+    "verify:local-package": "node scripts/verify-local-package.mjs",
+    "benchmark:project-search": "esbuild scripts/benchmark-project-search.ts --bundle --platform=node --format=cjs --outfile=/tmp/raggle-project-search-benchmark.cjs && node /tmp/raggle-project-search-benchmark.cjs",
+    "verify:radar-catalog": "node --no-warnings --experimental-strip-types test/ai-chat-clients/verify-radar-catalog.ts",
+    "verify:radar-target": "node --no-warnings --experimental-strip-types test/ai-chat-clients/verify-radar-target.ts",
+    "verify:session-resolvers": "node --no-warnings --experimental-strip-types test/ai-chat-clients/verify-session-resolvers.ts",
+    "verify:raggle-project-config": "node scripts/verify-raggle-project-config.js",
+    "verify:project-list-memory": "node scripts/verify-project-list-memory.js",
+    "test:folder-mapping": "node test/folder-mapping.js",
+    "publish": "npx @raycast/api@latest publish",
+    "publish:plugins": "npm publish ./packages/plugins",
+    "test:contact-unit": "node scripts/test-contact-unit.js",
+    "test:contact-ai": "node scripts/test-contact-ai.js"
+  }
+}

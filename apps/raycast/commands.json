@@ -1,0 +1,122 @@
+[
+  {
+    "name": "raggle-login",
+    "title": "Raggle: Login",
+    "description": "Connect your Raggle account to Raycast",
+    "mode": "no-view",
+    "icon": "command-icon.png",
+    "keywords": [
+      "raggle",
+      "login",
+      "connect",
+      "oauth"
+    ]
+  },
+  {
+    "name": "fetch",
+    "title": "Fetch Data",
+    "description": "Extract content from URLs using Raggle",
+    "mode": "view",
+    "icon": "fetch.png",
+    "keywords": [
+      "extract",
+      "content",
+      "url",
+      "article"
+    ]
+  },
+  {
+    "name": "search",
+    "title": "Web Search",
+    "description": "Search the web and view results in a list",
+    "mode": "view",
+    "icon": "fetch.png",
+    "keywords": [
+      "web",
+      "search",
+      "find",
+      "browse"
+    ],
+    "preferences": [
+      {
+        "name": "apiKey",
+        "type": "password",
+        "required": true,
+        "title": "API Key",
+        "description": "Your search API key",
+        "placeholder": "Enter your API key"
+      }
+    ]
+  },
+
+  {
+    "name": "create-extractor",
+    "title": "Create Extractor",
+    "description": "Create a new extractor pattern for Raggle",
+    "mode": "no-view",
+    "icon": "command-icon.png",
+    "keywords": [
+      "create",
+      "extractor",
+      "new",
+      "pattern"
+    ]
+  },
+  {
+    "name": "open-dashboard",
+    "title": "Open Dashboard",
+    "description": "Open the Raggle dashboard in your browser",
+    "mode": "no-view",
+    "icon": "command-icon.png",
+    "keywords": [
+      "dashboard",
+      "raggle",
+      "open",
+      "manage"
+    ]
+  },
+  {
+    "name": "raggle-oauth",
+    "title": "Raggle OAuth (Advanced)",
+    "description": "OAuth integration with Raggle API (advanced configuration)",
+    "mode": "view",
+    "icon": "command-icon.png",
+    "preferences": [
+      {
+        "name": "clientId",
+        "type": "textfield",
+        "required": true,
+        "title": "Client ID",
+        "description": "Your Raggle API Client ID",
+        "placeholder": "Enter your client ID"
+      },
+      {
+        "name": "authorizeUrl",
+        "type": "textfield",
+        "required": true,
+        "title": "Authorization URL",
+        "description": "The Raggle API authorization endpoint",
+        "placeholder": "https://your-api.com/api/v1/oauth/authorize",
+        "default": "https://api.raggle.co/oauth/authorize"
+      },
+      {
+        "name": "tokenUrl",
+        "type": "textfield",
+        "required": true,
+        "title": "Token URL",
+        "description": "The Raggle API token endpoint",
+        "placeholder": "https://your-api.com/api/v1/oauth/token",
+        "default": "https://api.raggle.co/oauth/token"
+      },
+      {
+        "name": "apiBaseUrl",
+        "type": "textfield",
+        "required": true,
+        "title": "API Base URL",
+        "description": "The Raggle API base URL",
+        "placeholder": "https://your-api.com/api/v1",
+        "default": "https://api.raggle.co/api/v1"
+      }
+    ]
+  }
+]

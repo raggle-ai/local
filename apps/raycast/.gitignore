@@ -1,0 +1,5 @@
+/swift
+node_modules/
+/dist
+.DS_Store
+/.raycast

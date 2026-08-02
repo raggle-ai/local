@@ -1,0 +1,170 @@
+[
+  {
+    "id": "open",
+    "title": "Open Project",
+    "subtitle": "Open or clone the selected project in the default app.",
+    "shortcut": { "modifiers": [], "key": "return" },
+    "section": "Primary"
+  },
+  {
+    "id": "open-finder",
+    "title": "Open Folder in Finder",
+    "subtitle": "Reveal the selected local project folder in Finder.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "return" },
+    "section": "Primary"
+  },
+  {
+    "id": "project-actions",
+    "title": "Project Actions",
+    "subtitle": "Open the selected project's repository and plugin actions.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "p" },
+    "section": "Primary"
+  },
+  {
+    "id": "new-session",
+    "title": "Open New Session",
+    "subtitle": "Start a fresh session for the selected project.",
+    "shortcut": { "modifiers": ["cmd"], "key": "n" },
+    "section": "Primary"
+  },
+  {
+    "id": "open-terminal",
+    "title": "Open in Terminal",
+    "subtitle": "Open the selected project in the default terminal app.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "d" },
+    "section": "Open In"
+  },
+  {
+    "id": "open-ide",
+    "title": "Open in IDE",
+    "subtitle": "Open the selected project in the default IDE or code editor.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "i" },
+    "section": "Open In"
+  },
+  {
+    "id": "open-ai-client",
+    "title": "Open in AI Client",
+    "subtitle": "Open the selected project in the default AI client.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "a" },
+    "section": "Open In"
+  },
+  {
+    "id": "open-documents",
+    "title": "Open in Documents",
+    "subtitle": "Open the selected project in the default documents app.",
+    "shortcut": { "modifiers": ["cmd", "opt"], "key": "m" },
+    "section": "Open In"
+  },
+  {
+    "id": "open-git-diff",
+    "title": "Open in Git Diff",
+    "subtitle": "Open the selected project in the default Git diff viewer.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "g" },
+    "section": "Open In"
+  },
+  {
+    "id": "copy-repository-url",
+    "title": "Copy Repository URL",
+    "subtitle": "Copy the selected project's repository URL to the clipboard.",
+    "shortcut": { "modifiers": ["cmd", "opt"], "key": "." },
+    "section": "Repository"
+  },
+  {
+    "id": "copy-project-deeplink",
+    "title": "Copy Open In Deeplink",
+    "subtitle": "Copy the selected Open In target's deeplink for the project.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "c" },
+    "section": "Repository"
+  },
+  {
+    "id": "open-repository-browser",
+    "title": "Open Repository in Browser",
+    "subtitle": "Open the selected project's repository URL in the browser.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "o" },
+    "section": "Repository"
+  },
+  {
+    "id": "sync-remote",
+    "title": "Sync Remote",
+    "subtitle": "Fast-forward the current branch from its Git remote.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "b" },
+    "section": "Repository"
+  },
+  {
+    "id": "reload-projects",
+    "title": "Reload Projects",
+    "subtitle": "Refresh project metadata and reload the visible results.",
+    "shortcut": { "modifiers": ["cmd"], "key": "r" },
+    "section": "Management"
+  },
+  {
+    "id": "add-project",
+    "title": "Add New Project",
+    "subtitle": "Add a repository to the project source.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "n" },
+    "section": "Management"
+  },
+  {
+    "id": "edit-repository",
+    "title": "Edit Repository",
+    "subtitle": "Edit the selected repository's saved import entry.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "e" },
+    "section": "Management"
+  },
+  {
+    "id": "project-settings-row",
+    "title": "Project Row Settings",
+    "subtitle": "Change per-repository or subpath project settings.",
+    "shortcut": { "modifiers": ["cmd", "opt"], "key": "," },
+    "section": "Management"
+  },
+  {
+    "id": "add-subpath",
+    "title": "Add Subpath",
+    "subtitle": "Add a first-level folder as a searchable project result.",
+    "shortcut": { "modifiers": ["cmd", "opt"], "key": "p" },
+    "section": "Management"
+  },
+  {
+    "id": "delete-project",
+    "title": "Delete Project",
+    "subtitle": "Remove the selected repository from the project source.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "delete" },
+    "section": "Management"
+  },
+  {
+    "id": "project-icon",
+    "title": "Add or Change Project Icon",
+    "subtitle": "Save or replace the selected project's custom icon.",
+    "shortcut": { "modifiers": ["cmd", "opt"], "key": "i" },
+    "section": "Management"
+  },
+  {
+    "id": "exclude-project",
+    "title": "Exclude Project from Results",
+    "subtitle": "Hide the selected local project from the results list.",
+    "shortcut": { "modifiers": ["ctrl"], "key": "x" },
+    "section": "Management"
+  },
+  {
+    "id": "project-settings",
+    "title": "Project Settings",
+    "subtitle": "Open command-level project preferences.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "," },
+    "section": "Management"
+  },
+  {
+    "id": "toggle-favorite",
+    "title": "Toggle Favorite",
+    "subtitle": "Add or remove the selected row from favorites.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "l" },
+    "section": "Favorites"
+  },
+  {
+    "id": "move-to-bottom",
+    "title": "Move to Bottom",
+    "subtitle": "Move a non-favorite row below recent selections.",
+    "shortcut": { "modifiers": ["cmd", "shift"], "key": "h" },
+    "section": "Favorites"
+  }
+]

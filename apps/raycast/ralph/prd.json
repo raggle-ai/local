@@ -1,0 +1,44 @@
+{
+  "config": {
+    "commitStrategy": "per-story",
+    "autoCommit": true,
+    "commitPrefix": "feat",
+    "maxPromptSize": 102400,
+    "verifyTimeout": 120,
+    "fallbackChain": [
+      "opencode",
+      "claude",
+      "codex"
+    ]
+  },
+  "references": [
+    {
+      "type": "documentation",
+      "path": "ralph/README.md",
+      "description": "Ralph setup instructions and configuration guide"
+    },
+    {
+      "type": "architecture",
+      "path": "",
+      "description": "Link to architecture documentation or diagrams"
+    },
+    {
+      "type": "external",
+      "url": "",
+      "description": "External reference (API docs, library documentation, etc.)"
+    }
+  ],
+  "userStories": [
+    {
+      "title": "Add example feature",
+      "acceptanceCriteria": [
+        "Feature works as expected",
+        "typecheck passes",
+        "tests pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Implementation: src/example.ts | Reference: https://example.com/docs | Dependencies: see package.json"
+    }
+  ]
+}

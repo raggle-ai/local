@@ -1,0 +1,152 @@
+[
+  {
+    "target": "opencode",
+    "icon": "assets/opencode.svg"
+  },
+  {
+    "target": "vscodium",
+    "title": "VSCodium",
+    "icon": "assets/vscodium.svg",
+    "appNames": ["VSCodium.app"]
+  },
+  {
+    "target": "codex",
+    "icon": "assets/codex.svg"
+  },
+  {
+    "target": "openchamber",
+    "title": "OpenChamber",
+    "icon": "command-icon.png",
+    "appNames": ["OpenChamber.app"]
+  },
+  {
+    "target": "t3-code",
+    "icon": "command-icon.png"
+  },
+  {
+    "target": "claude",
+    "icon": "command-icon.png"
+  },
+  {
+    "target": "devin",
+    "icon": "command-icon.png"
+  },
+  {
+    "target": "pible",
+    "icon": "command-icon.png"
+  },
+  {
+    "target": "vscode",
+    "title": "VS Code",
+    "icon": "command-icon.png",
+    "appNames": ["Visual Studio Code.app"]
+  },
+  {
+    "target": "cursor",
+    "title": "Cursor",
+    "icon": "command-icon.png",
+    "appNames": ["Cursor.app"]
+  },
+  {
+    "target": "windsurf",
+    "title": "Windsurf",
+    "icon": "command-icon.png",
+    "appNames": ["Windsurf.app"]
+  },
+  {
+    "target": "zed",
+    "title": "Zed",
+    "icon": "command-icon.png",
+    "appNames": ["Zed.app", "Zed Preview.app"]
+  },
+  {
+    "target": "sublime",
+    "title": "Sublime Text",
+    "icon": "command-icon.png",
+    "appNames": ["Sublime Text.app"]
+  },
+  {
+    "target": "bbedit",
+    "title": "BBEdit",
+    "icon": "command-icon.png",
+    "appNames": ["BBEdit.app"]
+  },
+  {
+    "target": "typora",
+    "title": "Typora",
+    "icon": "command-icon.png",
+    "appNames": ["Typora.app"]
+  },
+  {
+    "target": "zettlr",
+    "title": "Zettlr",
+    "icon": "command-icon.png",
+    "appNames": ["Zettlr.app"]
+  },
+  {
+    "target": "clearly",
+    "title": "Clearly",
+    "icon": "command-icon.png",
+    "appNames": ["Clearly.app"]
+  },
+  {
+    "target": "nova",
+    "title": "Nova",
+    "icon": "command-icon.png",
+    "appNames": ["Nova.app"]
+  },
+  {
+    "target": "webstorm",
+    "title": "WebStorm",
+    "icon": "command-icon.png",
+    "appNames": ["WebStorm.app"]
+  },
+  {
+    "target": "intellij",
+    "title": "IntelliJ IDEA",
+    "icon": "command-icon.png",
+    "appNames": ["IntelliJ IDEA.app", "IntelliJ IDEA CE.app"]
+  },
+  {
+    "target": "terminal",
+    "title": "Terminal",
+    "icon": "command-icon.png",
+    "appNames": ["Terminal.app"]
+  },
+  {
+    "target": "iterm2",
+    "title": "iTerm2",
+    "icon": "command-icon.png",
+    "appNames": ["iTerm.app"]
+  },
+  {
+    "target": "github-desktop",
+    "title": "GitHub Desktop",
+    "icon": "command-icon.png",
+    "appNames": ["GitHub Desktop.app"]
+  },
+  {
+    "target": "sourcetree",
+    "title": "Sourcetree",
+    "icon": "command-icon.png",
+    "appNames": ["Sourcetree.app", "SourceTree.app"]
+  },
+  {
+    "target": "finder",
+    "title": "Finder",
+    "icon": "command-icon.png",
+    "appNames": ["Finder.app"]
+  },
+  {
+    "target": "github",
+    "title": "GitHub",
+    "icon": "assets/github.svg",
+    "browserHosts": ["github.com"]
+  },
+  {
+    "target": "gitlab",
+    "title": "GitLab",
+    "icon": "assets/gitlab.svg",
+    "browserHosts": ["gitlab.com"]
+  }
+]
