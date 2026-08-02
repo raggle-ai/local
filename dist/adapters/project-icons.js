@@ -12,7 +12,7 @@ const node_path_1 = __importDefault(require("node:path"));
 const project_remote_1 = require("../core/project-remote");
 exports.projectIconExtensions = ["png", "jpg", "jpeg", "svg", "gif", "webp", "ico"];
 function discoverProjectIcon(worktree) {
-    const repoCandidates = ["icon", ".icon", "favicon"];
+    const repoCandidates = ["icon", ".icon", "favicon", "logo"];
     const settingsDir = node_path_1.default.join(worktree, ".opencode");
     for (const name of repoCandidates) {
         const candidate = node_path_1.default.join(worktree, name);
@@ -27,7 +27,7 @@ function discoverProjectIcon(worktree) {
         }
     }
     try {
-        const pattern = new RegExp(`^(?:icon|\\.icon|favicon)(?:\\.(${exports.projectIconExtensions.join("|")}))?$`, "i");
+        const pattern = new RegExp(`^(?:icon|\\.icon|favicon|logo)(?:\\.(${exports.projectIconExtensions.join("|")}))?$`, "i");
         const file = (0, node_fs_1.readdirSync)(worktree).find((name) => pattern.test(name));
         if (file)
             return node_path_1.default.join(worktree, file);

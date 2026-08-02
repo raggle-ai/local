@@ -5,7 +5,7 @@ import { remoteToBrowserUrl } from "../core/project-remote";
 export const projectIconExtensions = ["png", "jpg", "jpeg", "svg", "gif", "webp", "ico"];
 
 export function discoverProjectIcon(worktree: string) {
-  const repoCandidates = ["icon", ".icon", "favicon"];
+  const repoCandidates = ["icon", ".icon", "favicon", "logo"];
   const settingsDir = path.join(worktree, ".opencode");
 
   for (const name of repoCandidates) {
@@ -21,7 +21,7 @@ export function discoverProjectIcon(worktree: string) {
   }
 
   try {
-    const pattern = new RegExp(`^(?:icon|\\.icon|favicon)(?:\\.(${projectIconExtensions.join("|")}))?$`, "i");
+    const pattern = new RegExp(`^(?:icon|\\.icon|favicon|logo)(?:\\.(${projectIconExtensions.join("|")}))?$`, "i");
     const file = readdirSync(worktree).find((name) => pattern.test(name));
     if (file) return path.join(worktree, file);
   } catch {

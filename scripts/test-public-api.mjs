@@ -7,6 +7,7 @@ import {
   githubAuthenticatedAccounts,
   githubCliPath,
   githubPullRequestsBrowserUrl,
+  discoverProjectIcon,
   mergeRaggleProjectConfig,
   readImportedRepositoryPlugins,
   raggleProjectConfigFromProjectActionConfigs,
@@ -52,6 +53,10 @@ assert.equal(mergedConfig.removePathFromName, true);
 const tempDirectory = mkdtempSync(path.join(os.tmpdir(), "raggle-local-public-api-"));
 
 try {
+  const logoPath = path.join(tempDirectory, "logo.png");
+  writeFileSync(logoPath, "fixture");
+  assert.equal(discoverProjectIcon(tempDirectory), logoPath);
+
   const importFile = path.join(tempDirectory, "projects.json");
   writeFileSync(
     importFile,
