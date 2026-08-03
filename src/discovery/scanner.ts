@@ -44,7 +44,7 @@ type NativeScanner = {
     directory: string,
     options?: Pick<ScanCloneDirectoryOptions, "maxDepth" | "maxRepos" | "timeoutMs">,
     signal?: AbortSignal,
-    progress?: (repositories: [NativeRepository]) => void,
+    progress?: (repositories: [NativeRepository]) => boolean,
   ): Promise<NativeScanResult>;
 };
 
@@ -108,6 +108,7 @@ export async function scanCloneDirectoryRepositories(
       ? ([repository]) => {
           progressCount += 1;
           options.onProgress?.(normalizeRepository(repository), progressCount);
+          return options.signal?.aborted ?? false;
         }
       : undefined,
   );

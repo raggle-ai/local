@@ -56,6 +56,7 @@ async function scanCloneDirectoryRepositories(cloneDirectory, options) {
         ? ([repository]) => {
             progressCount += 1;
             options.onProgress?.(normalizeRepository(repository), progressCount);
+            return options.signal?.aborted ?? false;
         }
         : undefined);
     const normalized = {

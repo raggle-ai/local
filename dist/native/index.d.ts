@@ -8,7 +8,7 @@ export interface DiscoveredRepository {
 
 export declare function discoverRepository(directory: string): DiscoveredRepository | null
 
-export declare function scanCloneDirectoryRepositories(directory: string, options?: ScanOptions | undefined | null, signal?: AbortSignal | undefined | null, progress?: ((arg: [DiscoveredRepository]) => void) | undefined | null): Promise<unknown>
+export declare function scanCloneDirectoryRepositories(directory: string, options?: ScanOptions | undefined | null, signal?: AbortSignal | undefined | null, progress?: ((arg: [DiscoveredRepository]) => boolean) | undefined | null): Promise<unknown>
 
 export interface ScanOptions {
   maxDepth?: number

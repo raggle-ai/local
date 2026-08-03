@@ -7,6 +7,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, AtomicUsize, Ordering},
+    mpsc::sync_channel,
     Arc, Mutex,
 };
 use std::time::{Duration, Instant};
@@ -164,7 +165,7 @@ fn should_visit(entry: &DirEntry) -> bool {
 }
 
 type ProgressCallback =
-    ThreadsafeFunction<DiscoveredRepository, (), (DiscoveredRepository,), Status, false>;
+    ThreadsafeFunction<DiscoveredRepository, bool, (DiscoveredRepository,), Status, false>;
 
 fn scan(
     root: &Path,
@@ -261,9 +262,22 @@ fn scan(
                     repository_count.fetch_sub(1, Ordering::Relaxed);
                     return WalkState::Quit;
                 }
-                callback.call(repository.clone(), ThreadsafeFunctionCallMode::Blocking);
+                let (sender, receiver) = sync_channel(1);
+                let status = callback.call_with_return_value(
+                    repository.clone(),
+                    ThreadsafeFunctionCallMode::Blocking,
+                    move |stopped, _env| {
+                        let _ = sender.send(stopped.unwrap_or(false));
+                        Ok(())
+                    },
+                );
+                let should_stop = status == Status::Ok && receiver.recv().unwrap_or(false);
                 if let Ok(mut repositories) = repositories.lock() {
                     repositories.push(repository);
+                }
+                if should_stop {
+                    aborted.store(true, Ordering::Relaxed);
+                    return WalkState::Quit;
                 }
                 return WalkState::Skip;
             }
@@ -338,7 +352,7 @@ pub fn scan_clone_directory_repositories(
     directory: String,
     options: Option<ScanOptions>,
     signal: Option<AbortSignal>,
-    progress: Option<Function<'_, (DiscoveredRepository,), ()>>,
+    progress: Option<Function<'_, (DiscoveredRepository,), bool>>,
 ) -> Result<AsyncTask<ScanTask>> {
     let aborted = Arc::new(AtomicBool::new(false));
     if let Some(signal) = signal.as_ref() {
