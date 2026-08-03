@@ -1,5 +1,5 @@
 export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./load-local-projects";
-export { discoverLocalProjects, type DiscoverLocalProjectsOptions } from "./discover-local-projects";
+export { discoverLocalProjects, discoverLocalProjectsUnderFolder, type DiscoverLocalProjectsOptions, type DiscoverLocalProjectsUnderFolderOptions, } from "./discover-local-projects";
 export type { LocalProject, LocalProjectDelta, LocalProjectLoadPhase, LocalProjectUpdate, LoadLocalProjectsOptions, NormalizedRemoteProject, ProjectActionConfig, RemoteProject, } from "./types";
 export { applyLocalProjectDelta, createLocalProjectUpdate } from "./core/project-load-update";
 export type { ImportedRepositorySubpath } from "./project-subpaths";
@@ -16,4 +16,4 @@ export { discoverProjectIcon, fetchGithubOwnerIcon, githubOwnerFromRemoteUrl, pr
 export { listVisibleProjects, latestSessionForWorktree, saveProjectIcon, type LatestSessionRow, type VisibleProjectRow, } from "./opencode-local";
 export { initialFavoriteProjectRenderLimit, initialNonFavoriteProjectRenderLimit, initialSearchProjectRenderLimit, maxProgressiveIconHydrationProjects, nextProjectRenderLimit, projectRenderLimitIncrement, } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
-export { scanCloneDirectoryRepositories, type DiscoveredRepository, type ScanCloneDirectoryOptions, type ScanCloneDirectoryResult, } from "./scanner";
+export { discoverRepository, scanCloneDirectoryRepositories, type DiscoveredRepository, type ScanCloneDirectoryOptions, type ScanCloneDirectoryResult, } from "./scanner";

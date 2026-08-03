@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.discoverRepository = discoverRepository;
 exports.scanCloneDirectoryRepositories = scanCloneDirectoryRepositories;
 const node_fs_1 = require("node:fs");
 const node_path_1 = __importDefault(require("node:path"));
@@ -63,6 +64,16 @@ function discoverRepositoryFromDirectory(worktree, configDirectory) {
         ...(currentBranch ? { currentBranch } : {}),
     };
 }
+/** Identifies a Git repository rooted at exactly the supplied directory. */
+function discoverRepository(directory) {
+    const worktree = node_path_1.default.resolve(directory);
+    const gitDirectoryPath = gitDirectory(worktree);
+    if (gitDirectoryPath)
+        return discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
+    if (hasBareRepoMarkers(worktree))
+        return discoverRepositoryFromDirectory(worktree, worktree);
+    return undefined;
+}
 function scanCloneDirectoryRepositories(cloneDirectory, options) {
     const startedAt = Date.now();
     const maxRepos = options?.maxRepos;
@@ -105,15 +116,7 @@ function scanCloneDirectoryRepositories(cloneDirectory, options) {
                 truncated = true;
                 break;
             }
-            const worktree = node_path_1.default.join(cloneDirectory, entry.name);
-            const gitDirectoryPath = gitDirectory(worktree);
-            let repository;
-            if (gitDirectoryPath) {
-                repository = discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
-            }
-            else if (hasBareRepoMarkers(worktree)) {
-                repository = discoverRepositoryFromDirectory(worktree, worktree);
-            }
+            const repository = discoverRepository(node_path_1.default.join(cloneDirectory, entry.name));
             if (!repository)
                 continue;
             repositories.push(repository);

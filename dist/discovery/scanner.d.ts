@@ -18,4 +18,6 @@ export type ScanCloneDirectoryResult = {
     maxRepos: number | undefined;
     timeoutMs: number | undefined;
 };
+/** Identifies a Git repository rooted at exactly the supplied directory. */
+export declare function discoverRepository(directory: string): DiscoveredRepository | undefined;
 export declare function scanCloneDirectoryRepositories(cloneDirectory: string, options?: ScanCloneDirectoryOptions): ScanCloneDirectoryResult;

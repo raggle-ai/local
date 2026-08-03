@@ -87,6 +87,16 @@ function discoverRepositoryFromDirectory(worktree: string, configDirectory: stri
   };
 }
 
+/** Identifies a Git repository rooted at exactly the supplied directory. */
+export function discoverRepository(directory: string): DiscoveredRepository | undefined {
+  const worktree = path.resolve(directory);
+  const gitDirectoryPath = gitDirectory(worktree);
+
+  if (gitDirectoryPath) return discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
+  if (hasBareRepoMarkers(worktree)) return discoverRepositoryFromDirectory(worktree, worktree);
+  return undefined;
+}
+
 export function scanCloneDirectoryRepositories(
   cloneDirectory: string,
   options?: ScanCloneDirectoryOptions,
@@ -137,16 +147,7 @@ export function scanCloneDirectoryRepositories(
         break;
       }
 
-      const worktree = path.join(cloneDirectory, entry.name);
-      const gitDirectoryPath = gitDirectory(worktree);
-
-      let repository: DiscoveredRepository | undefined;
-
-      if (gitDirectoryPath) {
-        repository = discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
-      } else if (hasBareRepoMarkers(worktree)) {
-        repository = discoverRepositoryFromDirectory(worktree, worktree);
-      }
+      const repository = discoverRepository(path.join(cloneDirectory, entry.name));
 
       if (!repository) continue;
 

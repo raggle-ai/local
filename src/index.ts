@@ -1,5 +1,10 @@
 export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./load-local-projects";
-export { discoverLocalProjects, type DiscoverLocalProjectsOptions } from "./discover-local-projects";
+export {
+  discoverLocalProjects,
+  discoverLocalProjectsUnderFolder,
+  type DiscoverLocalProjectsOptions,
+  type DiscoverLocalProjectsUnderFolderOptions,
+} from "./discover-local-projects";
 export type {
   LocalProject,
   LocalProjectDelta,
@@ -125,6 +130,7 @@ export {
 } from "./project-list-limits";
 export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
 export {
+  discoverRepository,
   scanCloneDirectoryRepositories,
   type DiscoveredRepository,
   type ScanCloneDirectoryOptions,

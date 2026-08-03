@@ -33,6 +33,21 @@ import {
 
 The package exposes a TypeScript API and ships compiled CommonJS files in `dist`.
 
+## CLI
+
+List the identified projects strictly beneath a folder. The folder can be a
+repository root, a configured folder inside a repository, or a parent directory
+containing repositories:
+
+```sh
+raggle-local list --folder /Users/you/projects/main/happysoft
+cd /Users/you/projects/main/happysoft && raggle-local list
+```
+
+The command writes a JSON array of absolute project-folder paths. It does not
+include the selected folder itself. `--folder` is a global option, can appear
+before or after the command, and defaults to the current working directory.
+
 ## Layout
 
 - `src/core`: pure project naming, config normalization, subpath rules, keywords, and types.

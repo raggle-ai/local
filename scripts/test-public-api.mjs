@@ -9,6 +9,7 @@ import {
   githubPullRequestsBrowserUrl,
   discoverProjectIcon,
   discoverLocalProjects,
+  discoverLocalProjectsUnderFolder,
   mergeRaggleProjectConfig,
   readImportedRepositoryPlugins,
   raggleProjectConfigFromProjectActionConfigs,
@@ -91,6 +92,32 @@ try {
   assert.equal(discovered.length, 1);
   assert.equal(discovered[0].worktree, worktree);
   assert.equal(discovered[0].name, "example");
+
+  const repositoryRoot = path.join(tempDirectory, "main");
+  const scopedFolder = path.join(repositoryRoot, "happysoft");
+  const scopedChild = path.join(scopedFolder, "accounting");
+  const otherFolder = path.join(repositoryRoot, "other");
+  mkdirSync(path.join(repositoryRoot, ".git"), { recursive: true });
+  mkdirSync(scopedChild, { recursive: true });
+  mkdirSync(otherFolder, { recursive: true });
+  writeFileSync(
+    path.join(repositoryRoot, ".git", "config"),
+    '[remote "origin"]\n  url = https://github.com/raggle-ai/main.git\n',
+  );
+  writeFileSync(path.join(repositoryRoot, ".git", "HEAD"), "ref: refs/heads/main\n");
+  writeFileSync(path.join(repositoryRoot, "raggle.json"), JSON.stringify({ allSubpaths: true }));
+
+  const scoped = await discoverLocalProjectsUnderFolder({ folder: scopedFolder });
+  assert.deepEqual(
+    scoped.map((project) => project.worktree),
+    [scopedChild],
+  );
+
+  const repositoryChildren = await discoverLocalProjectsUnderFolder({ folder: repositoryRoot });
+  assert.deepEqual(
+    repositoryChildren.map((project) => project.worktree).sort(),
+    [scopedFolder, scopedChild, otherFolder].sort(),
+  );
 } finally {
   rmSync(tempDirectory, { recursive: true, force: true });
 }
