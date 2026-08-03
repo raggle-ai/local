@@ -5,6 +5,8 @@ data/
 .env.*
 coverage/
 *.tsbuildinfo
+native/scanner/target/
+dist/native/*.node
 
 # Local Pi trace review workspace and uncommitted safety filters.
 .pi/hf-sessions/

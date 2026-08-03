@@ -4,20 +4,27 @@ export type DiscoveredRepository = {
     currentBranch?: string;
 };
 export type ScanCloneDirectoryOptions = {
+    maxDepth?: number;
     maxRepos?: number;
     timeoutMs?: number;
     signal?: AbortSignal;
-    onProgress?: (result: ScanCloneDirectoryResult) => void;
+    onProgress?: (repository: DiscoveredRepository, count: number) => void;
 };
 export type ScanCloneDirectoryResult = {
     repositories: DiscoveredRepository[];
+    warnings: string[];
     truncated: boolean;
     timedOut: boolean;
     stopped: boolean;
     durationMs: number;
-    maxRepos: number | undefined;
-    timeoutMs: number | undefined;
+    maxDepth: number;
+    maxRepos: number;
+    timeoutMs: number;
 };
 /** Identifies a Git repository rooted at exactly the supplied directory. */
 export declare function discoverRepository(directory: string): DiscoveredRepository | undefined;
-export declare function scanCloneDirectoryRepositories(cloneDirectory: string, options?: ScanCloneDirectoryOptions): ScanCloneDirectoryResult;
+/**
+ * Discovers repositories without blocking the JavaScript event loop. Traversal
+ * runs in napi-rs' async worker pool and is bounded by depth, count, and time.
+ */
+export declare function scanCloneDirectoryRepositories(cloneDirectory: string, options?: ScanCloneDirectoryOptions): Promise<ScanCloneDirectoryResult>;

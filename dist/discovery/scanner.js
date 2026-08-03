@@ -5,126 +5,62 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.discoverRepository = discoverRepository;
 exports.scanCloneDirectoryRepositories = scanCloneDirectoryRepositories;
-const node_fs_1 = require("node:fs");
+const node_module_1 = require("node:module");
 const node_path_1 = __importDefault(require("node:path"));
 const git_repository_1 = require("../adapters/git-repository");
-function readTextFile(filePath) {
-    try {
-        return (0, node_fs_1.readFileSync)(filePath, "utf8");
-    }
-    catch {
-        return undefined;
-    }
+const nativeRequire = (0, node_module_1.createRequire)(__filename);
+const nativeScanner = nativeRequire("../native");
+function boundedInteger(value, fallback, minimum, maximum) {
+    if (value === undefined || !Number.isFinite(value))
+        return fallback;
+    return Math.max(minimum, Math.min(maximum, Math.floor(value)));
 }
-function gitDirectory(worktree) {
-    const dotGitPath = node_path_1.default.join(worktree, ".git");
-    const stats = (0, node_fs_1.statSync)(dotGitPath, { throwIfNoEntry: false });
-    if (!stats)
-        return undefined;
-    // Regular clones have a .git directory; reading it would throw EISDIR.
-    if (stats.isDirectory())
-        return dotGitPath;
-    const dotGitContent = readTextFile(dotGitPath);
-    if (!dotGitContent)
-        return dotGitPath;
-    const match = dotGitContent.match(/^gitdir:\s*(.+)$/im);
-    const gitdir = match?.[1]?.trim();
-    if (!gitdir)
-        return undefined;
-    return node_path_1.default.isAbsolute(gitdir) ? gitdir : node_path_1.default.resolve(worktree, gitdir);
-}
-function readOriginRemoteUrl(gitConfig) {
-    const originSectionMatch = gitConfig.match(/\[remote\s+"origin"\]([\s\S]*?)(?=\n\[|$)/);
-    if (!originSectionMatch)
-        return undefined;
-    const urlMatch = originSectionMatch[1].match(/^\s*url\s*=\s*(.+)$/m);
-    return urlMatch?.[1]?.trim();
-}
-function readCurrentBranch(gitDirectoryPath) {
-    const head = readTextFile(node_path_1.default.join(gitDirectoryPath, "HEAD"))?.trim();
-    const match = head?.match(/^ref:\s+refs\/heads\/(.+)$/);
-    return match?.[1];
-}
-function hasBareRepoMarkers(worktree) {
-    return (((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "HEAD"), { throwIfNoEntry: false })?.isFile() ?? false) &&
-        ((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "objects"), { throwIfNoEntry: false })?.isDirectory() ?? false) &&
-        ((0, node_fs_1.statSync)(node_path_1.default.join(worktree, "refs"), { throwIfNoEntry: false })?.isDirectory() ?? false));
-}
-function discoverRepositoryFromDirectory(worktree, configDirectory) {
-    const gitConfig = readTextFile(node_path_1.default.join(configDirectory, "config"));
-    if (!gitConfig)
-        return undefined;
-    const remoteUrl = readOriginRemoteUrl(gitConfig);
-    if (!remoteUrl)
-        return undefined;
-    const currentBranch = readCurrentBranch(configDirectory);
+function normalizedLimits(options) {
     return {
-        worktree,
-        remoteUrl: (0, git_repository_1.normalizeRepositoryUrl)(remoteUrl),
-        ...(currentBranch ? { currentBranch } : {}),
+        maxDepth: boundedInteger(options?.maxDepth, 3, 1, 8),
+        maxRepos: boundedInteger(options?.maxRepos, 100, 1, 100_000),
+        timeoutMs: boundedInteger(options?.timeoutMs, 10_000, 1, 30_000),
+    };
+}
+function normalizeRepository(repository) {
+    return {
+        ...repository,
+        worktree: node_path_1.default.resolve(repository.worktree),
+        remoteUrl: (0, git_repository_1.normalizeRepositoryUrl)(repository.remoteUrl),
     };
 }
 /** Identifies a Git repository rooted at exactly the supplied directory. */
 function discoverRepository(directory) {
-    const worktree = node_path_1.default.resolve(directory);
-    const gitDirectoryPath = gitDirectory(worktree);
-    if (gitDirectoryPath)
-        return discoverRepositoryFromDirectory(worktree, gitDirectoryPath);
-    if (hasBareRepoMarkers(worktree))
-        return discoverRepositoryFromDirectory(worktree, worktree);
-    return undefined;
+    const repository = nativeScanner.discoverRepository(node_path_1.default.resolve(directory));
+    return repository ? normalizeRepository(repository) : undefined;
 }
-function scanCloneDirectoryRepositories(cloneDirectory, options) {
-    const startedAt = Date.now();
-    const maxRepos = options?.maxRepos;
-    const timeoutMs = options?.timeoutMs;
-    const signal = options?.signal;
-    const repositories = [];
-    let truncated = false;
-    let timedOut = false;
-    let stopped = false;
-    const buildResult = () => ({
-        repositories: [...repositories],
-        truncated,
-        timedOut,
-        stopped,
-        durationMs: Date.now() - startedAt,
-        maxRepos,
-        timeoutMs,
-    });
-    const isAborted = () => {
-        if (signal?.aborted) {
-            stopped = true;
-            return true;
-        }
-        return false;
-    };
-    const isTimedOut = () => {
-        if (timeoutMs !== undefined && Date.now() - startedAt > timeoutMs) {
-            timedOut = true;
-            return true;
-        }
-        return false;
-    };
-    try {
-        for (const entry of (0, node_fs_1.readdirSync)(cloneDirectory, { withFileTypes: true })) {
-            if (!entry.isDirectory() || entry.isSymbolicLink())
-                continue;
-            if (isAborted() || isTimedOut())
-                break;
-            if (maxRepos !== undefined && repositories.length >= maxRepos) {
-                truncated = true;
-                break;
-            }
-            const repository = discoverRepository(node_path_1.default.join(cloneDirectory, entry.name));
-            if (!repository)
-                continue;
-            repositories.push(repository);
-            options?.onProgress?.(buildResult());
-        }
+/**
+ * Discovers repositories without blocking the JavaScript event loop. Traversal
+ * runs in napi-rs' async worker pool and is bounded by depth, count, and time.
+ */
+async function scanCloneDirectoryRepositories(cloneDirectory, options) {
+    const limits = normalizedLimits(options);
+    if (options?.signal?.aborted) {
+        return {
+            repositories: [],
+            warnings: [],
+            truncated: false,
+            timedOut: false,
+            stopped: true,
+            durationMs: 0,
+            ...limits,
+        };
     }
-    catch {
-        return buildResult();
-    }
-    return buildResult();
+    let progressCount = 0;
+    const result = await nativeScanner.scanCloneDirectoryRepositories(node_path_1.default.resolve(cloneDirectory), limits, options?.signal, options?.onProgress
+        ? ([repository]) => {
+            progressCount += 1;
+            options.onProgress?.(normalizeRepository(repository), progressCount);
+        }
+        : undefined);
+    const normalized = {
+        ...result,
+        repositories: result.repositories.map(normalizeRepository),
+    };
+    return normalized;
 }

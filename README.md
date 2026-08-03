@@ -59,6 +59,28 @@ Root-level source files are compatibility shims for the original extracted modul
 
 ## Discovery
 
+Repository scanning is asynchronous and runs in a worker thread so recursive
+filesystem traversal does not block the caller. Scans default to three directory
+levels and 100 repositories; both limits can be overridden. Cancellation returns
+the repositories found so far:
+
+```ts
+const controller = new AbortController();
+const scan = await scanCloneDirectoryRepositories("/Users/you/projects", {
+  maxDepth: 4,
+  maxRepos: 1_000,
+  timeoutMs: 5_000,
+  signal: controller.signal,
+  onProgress: (repository, count) => console.log(count, repository.worktree),
+});
+
+console.log(scan.repositories, scan.warnings, scan.truncated);
+```
+
+The scanner recognizes normal clones, Git worktrees, and bare repositories. It
+does not follow symlinked directories and skips common dependency, build, cache,
+and version-control metadata directories.
+
 ### Progressive updates
 
 `loadLocalProjects` can report repository roots and resolved folders before subpath discovery completes. Existing one-argument callbacks continue to work. A second argument identifies whether the list is partial or authoritative:
@@ -90,7 +112,9 @@ await loadLocalProjects(projects, {
 
 Each delta contains idempotent `upserted` projects. `removedWorktrees` remains empty during partial phases and is populated only by the authoritative final phase. The final callback's `items` array is the same complete result returned by the promise.
 
-Folder discovery first reads `.git/config` and `.git/HEAD` directly, then falls back to Git subprocesses if needed. This keeps the package portable while leaving a clear replacement point for a future Rust `napi-rs` scanner if benchmarks show TypeScript is the bottleneck.
+Folder discovery runs in a Rust `napi-rs` worker and reads `.git/config` and
+`.git/HEAD` directly without Git subprocesses. Published packages include native
+bindings for Apple Silicon Macs, Intel Macs, and x64 Linux.
 
 A directory containing `kennel.json` is treated as an automatic subpath root: it becomes a project itself and its child folders are included. `loadLocalProjects` accepts `subpathMarkerFiles` to add further marker file names:
 
@@ -151,7 +175,10 @@ const merged = raggleProjectConfigFromProjectActionConfigs([
 
 ```ts
 const accounts = await githubAuthenticatedAccounts();
-const url = githubPullRequestsBrowserUrl(repository, accounts.map((account) => account.username));
+const url = githubPullRequestsBrowserUrl(
+  repository,
+  accounts.map((account) => account.username),
+);
 ```
 
 ```sh
