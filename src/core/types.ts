@@ -10,6 +10,7 @@ export type RemoteProject = {
   tags?: string[];
   subpaths?: ImportedRepositorySubpath[];
   allSubpath?: boolean;
+  allTopLevelFolders?: boolean;
   folders?: string[];
   clonePathTemplate?: string;
   removePathFromName?: boolean;
@@ -43,6 +44,7 @@ export type LocalProject = {
   relativePath?: string;
   isSubpathRoot?: boolean;
   allSubpath?: boolean;
+  allTopLevelFolders?: boolean;
   subpathAllSubpath?: boolean;
   removePathFromName?: boolean;
   hasCustomName?: boolean;
@@ -84,9 +86,9 @@ export type LoadLocalProjectsOptions = {
   scannedRepositories?: DiscoveredRepository[];
   /**
    * Extra marker file names (like the built-in kennel.json). A directory that
-   * contains one becomes an allSubpath subpath root, so its child folders are
+   * contains one becomes an all-folder subpath root, so its child folders are
    * included automatically. Root-level discovery of these markers runs for any
-   * repository whose root has a raggle.json, even without allSubpath.
+   * repository whose root has a raggle.json, even without allSubpaths.
    */
   subpathMarkerFiles?: string[];
   /**
@@ -101,12 +103,28 @@ export type LoadLocalProjectsOptions = {
 export type NormalizedRemoteProject = Required<
   Pick<
     RemoteProject,
-    "remoteUrl" | "repository" | "tags" | "subpaths" | "allSubpath" | "folders" | "plugins" | "removePathFromName"
+    | "remoteUrl"
+    | "repository"
+    | "tags"
+    | "subpaths"
+    | "allSubpath"
+    | "allTopLevelFolders"
+    | "folders"
+    | "plugins"
+    | "removePathFromName"
   >
 > &
   Omit<
     RemoteProject,
-    "remoteUrl" | "repository" | "tags" | "subpaths" | "allSubpath" | "folders" | "plugins" | "removePathFromName"
+    | "remoteUrl"
+    | "repository"
+    | "tags"
+    | "subpaths"
+    | "allSubpath"
+    | "allTopLevelFolders"
+    | "folders"
+    | "plugins"
+    | "removePathFromName"
   > & {
     hasCustomName: boolean;
   };

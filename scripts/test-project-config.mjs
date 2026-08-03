@@ -32,6 +32,7 @@ try {
   );
   mkdirSync(path.join(worktree, "commands"));
   mkdirSync(path.join(worktree, "commands", "scripts"));
+  mkdirSync(path.join(worktree, "commands", "scripts", "deep"));
   mkdirSync(path.join(worktree, "commands", "cache"));
   mkdirSync(path.join(worktree, "__pycache__"));
   mkdirSync(path.join(worktree, "_generated"));
@@ -77,7 +78,11 @@ try {
   );
   assert.ok(
     projects.some((item) => item.relativePath === "commands/scripts"),
-    "Expected allSubpaths to expand child folders and keep same-named folders below other top-level folders",
+    "Expected allSubpaths to expand child folders",
+  );
+  assert.ok(
+    projects.some((item) => item.relativePath === "commands/scripts/deep"),
+    "Expected allSubpaths to recursively expand folders at every depth",
   );
   assert.equal(
     projects.some((item) => item.relativePath === "commands/cache"),
@@ -91,12 +96,57 @@ try {
   );
   assert.ok(
     projects.some((item) => item.relativePath === "workspace/apps/web"),
-    "Expected allSubpaths in a nested folder config to expand that folder's direct child folders",
+    "Expected allSubpaths in a nested folder config to expand that folder's descendants",
   );
   assert.equal(
     projects.some((item) => item.relativePath === "workspace/apps/generated"),
     false,
     "Expected nested ignoredSubpaths to apply throughout that config's subtree",
+  );
+
+  const comparisonWorktree = path.join(cloneDirectory, "scope-comparison");
+  mkdirSync(path.join(comparisonWorktree, ".git"), { recursive: true });
+  writeFileSync(
+    path.join(comparisonWorktree, ".git", "config"),
+    '[remote "origin"]\n  url = https://github.com/raggle-ai/scope-comparison.git\n',
+  );
+  writeFileSync(path.join(comparisonWorktree, ".git", "HEAD"), "ref: refs/heads/main\n");
+  mkdirSync(path.join(comparisonWorktree, "alpha", "one", "deep"), { recursive: true });
+  mkdirSync(path.join(comparisonWorktree, "beta", "two"), { recursive: true });
+
+  const comparisonRepositories = loadImportedRepositoriesFromRows([
+    { url: "https://github.com/raggle-ai/scope-comparison.git" },
+  ]);
+  writeFileSync(
+    path.join(comparisonWorktree, "raggle.json"),
+    JSON.stringify({ allTopLevelFolders: true }),
+  );
+  const topLevelProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
+  const topLevelPaths = topLevelProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
+  assert.deepEqual(topLevelPaths, ["alpha", "beta"]);
+
+  writeFileSync(path.join(comparisonWorktree, "raggle.json"), JSON.stringify({ allSubpaths: true }));
+  const allSubpathProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
+  const allSubpathPaths = allSubpathProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
+  assert.deepEqual(allSubpathPaths, ["alpha", "alpha/one", "alpha/one/deep", "beta", "beta/two"]);
+  assert.equal(topLevelPaths.length, 2);
+  assert.equal(allSubpathPaths.length, 5);
+  console.log(
+    `scope comparison: allTopLevelFolders=${topLevelPaths.length}, allSubpaths=${allSubpathPaths.length}`,
+  );
+
+  const invalidConfigDirectory = path.join(cloneDirectory, "invalid-config");
+  mkdirSync(invalidConfigDirectory);
+  writeFileSync(path.join(invalidConfigDirectory, "raggle.json"), '{\n  "schemaVersion": 1,\n}\n');
+  assert.throws(
+    () => readRaggleProjectConfig(invalidConfigDirectory),
+    (error) => {
+      assert.equal(error.name, "RaggleProjectConfigParseError");
+      assert.equal(error.configPath, path.join(invalidConfigDirectory, "raggle.json"));
+      assert.match(error.message, /Trailing commas are not valid JSON at line 2, column 21/);
+      assert.match(error.message, /"schemaVersion": 1,\n {20}\^/);
+      return true;
+    },
   );
 } finally {
   rmSync(cloneDirectory, { recursive: true, force: true });

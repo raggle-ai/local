@@ -134,6 +134,7 @@ function normalizeRemoteProject(repository) {
         tags: repository.tags ?? [],
         subpaths: repository.subpaths ?? [],
         allSubpath: repository.allSubpath ?? false,
+        allTopLevelFolders: repository.allTopLevelFolders ?? false,
         folders: repository.folders ?? [],
         plugins: repository.plugins ?? [],
         removePathFromName: repository.removePathFromName ?? false,
@@ -223,6 +224,25 @@ async function readTopLevelSubpathDirectories(session, rootPath) {
         .filter((name) => (0, project_subpaths_1.shouldIncludeSubpathDirectory)(name))
         .map((name) => rootPath + node_path_1.default.sep + name);
 }
+async function discoverAllFolderSubpaths(session, rootPath, parentPath = ".", removePathFromName) {
+    const subpaths = [];
+    let directories = [subpathDirectory(rootPath, { path: parentPath })];
+    while (directories.length) {
+        const children = (await Promise.all(directories.map(async (directory) => {
+            const listing = await session.listDirectory(directory);
+            return listing.directories.filter(project_subpaths_1.shouldIncludeSubpathDirectory).map((name) => directory + node_path_1.default.sep + name);
+        }))).flat();
+        for (const directory of children) {
+            subpaths.push({
+                path: relativeSubpath(rootPath, directory),
+                allSubpath: false,
+                removePathFromName,
+            });
+        }
+        directories = children;
+    }
+    return subpaths;
+}
 function subpathDirectory(rootPath, subpath) {
     return subpath.path === "." ? rootPath : node_path_1.default.join(rootPath, ...subpath.path.split("/"));
 }
@@ -270,15 +290,26 @@ async function localConfigSubpaths(session, rootPath, subpaths, markerFiles) {
             if (!result)
                 continue;
             const { parentSubpath, config, discoveredSubpaths } = result;
-            const allSubpaths = config.allSubpath === true || config.allSubpaths === true
+            const allSubpaths = config.allSubpaths === true
+                ? await discoverAllFolderSubpaths(session, rootPath, parentSubpath.path, config.removePathFromName ?? parentSubpath.removePathFromName)
+                : [];
+            const allTopLevelFolders = config.allTopLevelFolders
                 ? (await readTopLevelSubpathDirectories(session, subpathDirectory(rootPath, parentSubpath))).map((directory) => ({
-                    path: relativeSubpath(subpathDirectory(rootPath, parentSubpath), directory),
-                    allSubpath: true,
+                    path: nestedSubpathPath(parentSubpath.path, node_path_1.default.basename(directory)),
+                    allSubpath: false,
                     removePathFromName: config.removePathFromName ?? parentSubpath.removePathFromName,
                 }))
                 : [];
-            for (const childSubpath of [...(config.subpaths ?? []), ...allSubpaths, ...discoveredSubpaths]) {
-                const childPath = nestedSubpathPath(parentSubpath.path, childSubpath.path);
+            const configuredChildren = (config.subpaths ?? []).map((childSubpath) => ({
+                ...childSubpath,
+                path: nestedSubpathPath(parentSubpath.path, childSubpath.path),
+            }));
+            const discoveredChildren = discoveredSubpaths.map((childSubpath) => ({
+                ...childSubpath,
+                path: nestedSubpathPath(parentSubpath.path, childSubpath.path),
+            }));
+            for (const childSubpath of [...configuredChildren, ...allSubpaths, ...discoveredChildren]) {
+                const childPath = childSubpath.path;
                 if (subpathsByPath.has(childPath))
                     continue;
                 const nestedSubpath = {
@@ -288,6 +319,10 @@ async function localConfigSubpaths(session, rootPath, subpaths, markerFiles) {
                 };
                 subpathsByPath.set(childPath, nestedSubpath);
                 pendingSubpaths.push(nestedSubpath);
+            }
+            for (const childSubpath of allTopLevelFolders) {
+                if (!subpathsByPath.has(childSubpath.path))
+                    subpathsByPath.set(childSubpath.path, childSubpath);
             }
         }
     }
@@ -325,6 +360,7 @@ function subpathProject(parent, worktree, displayPath, removePathFromName, subpa
         remoteUrl: parent.remoteUrl,
         browserUrl: parent.browserUrl,
         allSubpath: parent.allSubpath,
+        allTopLevelFolders: parent.allTopLevelFolders,
         hasCustomName: parent.hasCustomName,
         remoteMismatch: parent.remoteMismatch,
         isCloned: true,
@@ -385,6 +421,7 @@ function baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, 
         browserUrl: (0, project_remote_1.remoteToBrowserUrl)(repository.remoteUrl),
         removePathFromName: repository.removePathFromName,
         allSubpath: repository.allSubpath,
+        allTopLevelFolders: repository.allTopLevelFolders,
         isCloned,
     });
 }
@@ -466,7 +503,8 @@ async function inheritedIgnoredSubpaths(session, rootPath, relativePath, rootIgn
 }
 async function loadResolvedLocalProjectSubpaths(session, resolvedProject, repository, cachedProjectsByWorktree, markerFiles, options) {
     const hasCustomMarkers = Boolean(options?.subpathMarkerFiles?.length);
-    if ((!repository.subpaths.length && !repository.allSubpath && !hasCustomMarkers) || !resolvedProject.localPath) {
+    if ((!repository.subpaths.length && !repository.allSubpath && !repository.allTopLevelFolders && !hasCustomMarkers) ||
+        !resolvedProject.localPath) {
         return [];
     }
     const localPath = resolvedProject.localPath;
@@ -478,11 +516,16 @@ async function loadResolvedLocalProjectSubpaths(session, resolvedProject, reposi
     // Custom marker files extend discovery to repositories that opted in with a
     // recognized root config file but did not set allSubpath or list the folders
     // explicitly.
-    const discoverRootSubpaths = repository.allSubpath || (hasCustomMarkers && rootConfigResolution.configPath !== undefined);
+    const discoverRootSubpaths = repository.allSubpath ||
+        repository.allTopLevelFolders ||
+        (hasCustomMarkers && rootConfigResolution.configPath !== undefined);
     const rootAllSubpaths = repository.allSubpath
+        ? await discoverAllFolderSubpaths(session, localPath, ".", resolvedProject.item.removePathFromName ?? false)
+        : [];
+    const rootTopLevelFolders = repository.allTopLevelFolders
         ? (await readTopLevelSubpathDirectories(session, localPath)).map((directory) => ({
             path: relativeSubpath(localPath, directory),
-            allSubpath: true,
+            allSubpath: false,
             removePathFromName: resolvedProject.item.removePathFromName ?? false,
         }))
         : [];
@@ -490,6 +533,10 @@ async function loadResolvedLocalProjectSubpaths(session, resolvedProject, reposi
         ? await discoverConfigSubpaths(session, localPath, markerFiles, resolvedProject.item.removePathFromName ?? false)
         : [];
     const configuredSubpaths = await localConfigSubpaths(session, localPath, [...rootAllSubpaths, ...rootDiscoveredSubpaths, ...repository.subpaths], markerFiles);
+    for (const folder of rootTopLevelFolders) {
+        if (!configuredSubpaths.some((subpath) => subpath.path === folder.path))
+            configuredSubpaths.push(folder);
+    }
     const configuredSubpathGroups = await Promise.all(configuredSubpaths.map(async (subpath) => {
         const parentDirectory = subpathDirectory(localPath, subpath);
         const removePathFromName = subpath.removePathFromName ?? resolvedProject.item.removePathFromName ?? false;

@@ -42,6 +42,7 @@ const mergedConfig = raggleProjectConfigFromProjectActionConfigs([
     folders: ["team-b"],
     subpaths: [{ path: "apps/api" }],
     allSubpath: true,
+    allTopLevelFolders: true,
     removePathFromName: true,
   },
 ]);
@@ -49,7 +50,8 @@ const mergedConfig = raggleProjectConfigFromProjectActionConfigs([
 assert.deepEqual(mergedConfig.tags, ["cli", "shared", "ui"]);
 assert.deepEqual(mergedConfig.folders, ["team-a", "team-b"]);
 assert.deepEqual(mergedConfig.subpaths, [{ path: "apps/web" }, { path: "apps/api" }]);
-assert.equal(mergedConfig.allSubpath, true);
+assert.equal(mergedConfig.allSubpaths, true);
+assert.equal(mergedConfig.allTopLevelFolders, true);
 assert.equal(mergedConfig.removePathFromName, true);
 
 const tempDirectory = mkdtempSync(path.join(os.tmpdir(), "raggle-local-public-api-"));

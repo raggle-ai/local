@@ -3,6 +3,7 @@ export type ProjectActionConfig = {
     folders?: string[];
     subpaths?: unknown;
     allSubpath?: boolean;
+    allTopLevelFolders?: boolean;
     removePathFromName?: boolean;
     ignoredSubpaths?: string[] | string;
 };

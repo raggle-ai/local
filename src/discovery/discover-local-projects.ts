@@ -1,6 +1,7 @@
 import path from "node:path";
 import type { LocalProject, LoadLocalProjectsOptions, RemoteProject } from "../core/types";
 import { createLocalProjectUpdate } from "../core/project-load-update";
+import { readProjectConfigFileAsync, resolveProjectConfigFileNames } from "../adapters/raggle-project-config";
 import { loadLocalProjects } from "./load-local-projects";
 import {
   discoverRepository,
@@ -42,6 +43,13 @@ function repositoryAtOrAbove(folder: string) {
   }
 }
 
+async function hasProjectConfig(folder: string, configFiles?: string[]) {
+  for (const configFile of resolveProjectConfigFileNames(configFiles)) {
+    if (await readProjectConfigFileAsync(path.join(folder, configFile))) return true;
+  }
+  return false;
+}
+
 function isUnderFolder(project: LocalProject, folder: string) {
   const relative = path.relative(folder, project.worktree);
   return Boolean(relative) && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
@@ -66,9 +74,13 @@ export async function discoverLocalProjectsUnderFolder(
   const { folder: inputFolder, scan: scanOptions, onUpdate, previousItems = [], ...loadOptions } = options;
   const folder = path.resolve(inputFolder);
   const containingRepository = repositoryAtOrAbove(folder);
-  const cloneDirectory = containingRepository ? path.dirname(containingRepository.worktree) : folder;
-  const scannedRepositories = containingRepository
-    ? [containingRepository]
+  const useFolderBoundary =
+    containingRepository?.worktree !== folder && (await hasProjectConfig(folder, loadOptions.projectConfigFiles));
+  const scopedRepository =
+    containingRepository && useFolderBoundary ? { ...containingRepository, worktree: folder } : containingRepository;
+  const cloneDirectory = scopedRepository ? path.dirname(scopedRepository.worktree) : folder;
+  const scannedRepositories = scopedRepository
+    ? [scopedRepository]
     : scanCloneDirectoryRepositories(folder, scanOptions).repositories;
   const scopedPreviousItems = previousItems.filter((project) => isUnderFolder(project, folder));
 

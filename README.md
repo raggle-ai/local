@@ -101,7 +101,7 @@ await loadLocalProjects(projects, {
 });
 ```
 
-Built-in `kennel.json` markers are discovered wherever subpath scanning already runs (`allSubpath` repositories and configured subpaths). Custom markers additionally trigger root-level discovery for any cloned repository whose root has a project config file, so folders like `clients/` with a `_schema.json` are picked up without listing them in `subpaths`.
+Built-in `kennel.json` markers are discovered wherever subpath scanning already runs (`allSubpaths` repositories and configured subpaths). Custom markers additionally trigger root-level discovery for any cloned repository whose root has a project config file, so folders like `clients/` with a `_schema.json` are picked up without listing them in `subpaths`.
 
 Repo config is read from `raggle.json` or `index.json` (first existing file wins, in that order). `projectConfigFiles` adds custom names that are checked before the defaults:
 
@@ -114,12 +114,14 @@ await loadLocalProjects(projects, {
 
 Repository-local config contributes tags, folders, subpaths, and discovery settings. Project names remain sourced from the `RemoteProject` input so progressive updates use one stable name.
 
-Set `"allSubpaths": true` in a repository's `raggle.json` to make every eligible
-top-level folder and its direct child folders searchable without listing each
-one in `subpaths`. The singular `allSubpath` spelling remains supported for
-compatibility. Explicit `subpaths` can still be used alongside it for deeper or
-more selective expansion. A nested folder's `raggle.json` can also set
-`allSubpaths` to apply the same expansion relative to that folder.
+Set `"allTopLevelFolders": true` in a repository's `raggle.json` to make every
+eligible folder directly below the repository searchable while keeping the
+result list broad and shallow. Set `"allSubpaths": true` to recursively make
+every eligible descendant folder searchable. Explicit `subpaths` can still be
+used for selective expansion, and nested folder configs apply either setting
+relative to that folder.
+Malformed project config stops discovery with the file path, line, column, and
+source location instead of being ignored.
 Use `"excludeFolders": ["archive", "private"]` to hide selected repository-root
 folders and their complete subtrees. Unlike `ignoredSubpaths`, these names only
 match the first folder in a relative project path.

@@ -64,6 +64,7 @@ export {
   ignoredSubpathsFromProjectActionConfigs,
   raggleProjectConfigFromProjectActionConfigs,
   type RaggleProjectConfig,
+  RaggleProjectConfigParseError,
 } from "./raggle-project-config";
 export {
   clonePathTemplateFromFormValue,

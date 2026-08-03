@@ -14,14 +14,25 @@ export type RaggleProjectConfig = {
   tags?: string[];
   folders?: string[];
   subpaths?: ImportedRepositorySubpath[];
-  allSubpath?: boolean;
-  /** Config-friendly plural alias for enabling repository-wide subpath discovery. */
+  /** Recursively includes every eligible descendant folder. */
   allSubpaths?: boolean;
+  /** Includes every eligible folder directly below the configured directory. */
+  allTopLevelFolders?: boolean;
   removePathFromName?: boolean;
   ignoredSubpaths?: string[];
   /** Repository-root folders whose complete subtrees are excluded from discovery. */
   excludeFolders?: string[];
 };
+
+export class RaggleProjectConfigParseError extends SyntaxError {
+  constructor(
+    public readonly configPath: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "RaggleProjectConfigParseError";
+  }
+}
 
 export function normalizeIgnoredSubpaths(input: unknown, fallback: string[] = []) {
   if (input === undefined) return fallback;
@@ -65,7 +76,8 @@ export function mergeRaggleProjectConfig(
     tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
     folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
     subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
-    allSubpath: repository.allSubpath || config.allSubpath === true || config.allSubpaths === true,
+    allSubpath: repository.allSubpath || config.allSubpaths === true,
+    allTopLevelFolders: repository.allTopLevelFolders || config.allTopLevelFolders === true,
     removePathFromName: repository.removePathFromName || config.removePathFromName === true,
   };
 }
@@ -91,8 +103,8 @@ function normalizeRaggleProjectConfig(parsed: {
   tags?: unknown;
   folders?: unknown;
   subpaths?: unknown;
-  allSubpath?: unknown;
   allSubpaths?: unknown;
+  allTopLevelFolders?: unknown;
   removePathFromName?: unknown;
   ignoredSubpaths?: unknown;
   excludeFolders?: unknown;
@@ -101,12 +113,46 @@ function normalizeRaggleProjectConfig(parsed: {
     tags: normalizeTags(parsed.tags),
     folders: normalizeFolders(parsed.folders),
     subpaths: normalizeSubpaths(parsed.subpaths),
-    ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
     ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
+    ...(typeof parsed.allTopLevelFolders === "boolean" ? { allTopLevelFolders: parsed.allTopLevelFolders } : {}),
     ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
     ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
     excludeFolders: normalizeIgnoredSubpaths(parsed.excludeFolders),
   };
+}
+
+function jsonParseError(configPath: string, raw: string, error: unknown) {
+  const originalMessage = error instanceof Error ? error.message : String(error);
+  const positionMatch = originalMessage.match(/\bposition\s+(\d+)/i);
+  let offset = positionMatch ? Number.parseInt(positionMatch[1], 10) : undefined;
+  let reason = originalMessage
+    .replace(/^JSON\.parse:\s*/i, "")
+    .replace(/\s+at position\s+\d+(?:\s+\(line\s+\d+\s+column\s+\d+\))?\s*$/i, "");
+
+  if (offset !== undefined) {
+    let previous = offset - 1;
+    while (previous >= 0 && /\s/.test(raw[previous])) previous -= 1;
+    if ((raw[offset] === "}" || raw[offset] === "]") && raw[previous] === ",") {
+      offset = previous;
+      reason = "Trailing commas are not valid JSON";
+    }
+  }
+
+  if (offset === undefined || !Number.isFinite(offset)) {
+    return new RaggleProjectConfigParseError(configPath, `Invalid Raggle config: ${configPath}\n${reason}`);
+  }
+
+  const lineStart = raw.lastIndexOf("\n", Math.max(0, offset - 1)) + 1;
+  const lineEnd = raw.indexOf("\n", offset);
+  const sourceLine = raw.slice(lineStart, lineEnd === -1 ? raw.length : lineEnd);
+  const line = raw.slice(0, offset).split("\n").length;
+  const column = offset - lineStart + 1;
+  const caret = `${" ".repeat(Math.max(0, column - 1))}^`;
+
+  return new RaggleProjectConfigParseError(
+    configPath,
+    `Invalid Raggle config: ${configPath}\n${reason} at line ${line}, column ${column}\n${sourceLine}\n${caret}`,
+  );
 }
 
 /** Returns undefined when a generic file (like index.json) is not a raggle config. */
@@ -115,12 +161,16 @@ function parseRaggleProjectConfig(configPath: string, raw: string, requireMarker
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    console.warn(`Failed to read ${configPath}:`, error);
-    return {};
+    throw jsonParseError(configPath, raw, error);
   }
 
   if (requireMarker && !isRaggleConfigDocument(parsed)) return undefined;
-  if (!parsed || typeof parsed !== "object") return {};
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new RaggleProjectConfigParseError(
+      configPath,
+      `Invalid Raggle config: ${configPath}\nThe root value must be a JSON object`,
+    );
+  }
 
   return normalizeRaggleProjectConfig(parsed as Parameters<typeof normalizeRaggleProjectConfig>[0]);
 }
@@ -201,7 +251,8 @@ export function raggleProjectConfigFromProjectActionConfigs(configs: ProjectActi
       [],
       configs.flatMap((config) => normalizeSubpaths(config.subpaths)),
     ),
-    allSubpath: configs.some((config) => config.allSubpath === true),
+    allSubpaths: configs.some((config) => config.allSubpath === true),
+    allTopLevelFolders: configs.some((config) => config.allTopLevelFolders === true),
     removePathFromName: configs.some((config) => config.removePathFromName === true),
   };
 }

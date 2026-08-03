@@ -57,7 +57,7 @@ try {
           },
           { allSubpaths: true },
         );
-        if (merged.allSubpath !== true) throw new Error("allSubpaths alias was not included in the packed package");
+        if (merged.allSubpath !== true) throw new Error("allSubpaths was not included in the packed package");
         const configDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "raggle-packed-config-"));
         try {
           fs.writeFileSync(

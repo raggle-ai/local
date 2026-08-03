@@ -8,14 +8,19 @@ export type RaggleProjectConfig = {
     tags?: string[];
     folders?: string[];
     subpaths?: ImportedRepositorySubpath[];
-    allSubpath?: boolean;
-    /** Config-friendly plural alias for enabling repository-wide subpath discovery. */
+    /** Recursively includes every eligible descendant folder. */
     allSubpaths?: boolean;
+    /** Includes every eligible folder directly below the configured directory. */
+    allTopLevelFolders?: boolean;
     removePathFromName?: boolean;
     ignoredSubpaths?: string[];
     /** Repository-root folders whose complete subtrees are excluded from discovery. */
     excludeFolders?: string[];
 };
+export declare class RaggleProjectConfigParseError extends SyntaxError {
+    readonly configPath: string;
+    constructor(configPath: string, message: string);
+}
 export declare function normalizeIgnoredSubpaths(input: unknown, fallback?: string[]): string[];
 export declare function mergeIgnoredSubpaths(...inputs: Array<string[] | undefined>): string[];
 export declare function mergeRaggleProjectConfig(repository: ImportedRepository, config: RaggleProjectConfig): ImportedRepository;

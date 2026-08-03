@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_PROJECT_CONFIG_FILES = exports.DEFAULT_GLOBAL_IGNORED_SUBPATHS = void 0;
+exports.DEFAULT_PROJECT_CONFIG_FILES = exports.RaggleProjectConfigParseError = exports.DEFAULT_GLOBAL_IGNORED_SUBPATHS = void 0;
 exports.normalizeIgnoredSubpaths = normalizeIgnoredSubpaths;
 exports.mergeIgnoredSubpaths = mergeIgnoredSubpaths;
 exports.mergeRaggleProjectConfig = mergeRaggleProjectConfig;
@@ -21,6 +21,14 @@ const node_path_1 = __importDefault(require("node:path"));
 const project_config_fields_1 = require("../core/project-config-fields");
 const project_subpaths_1 = require("../core/project-subpaths");
 exports.DEFAULT_GLOBAL_IGNORED_SUBPATHS = [".raggle"];
+class RaggleProjectConfigParseError extends SyntaxError {
+    constructor(configPath, message) {
+        super(message);
+        this.configPath = configPath;
+        this.name = "RaggleProjectConfigParseError";
+    }
+}
+exports.RaggleProjectConfigParseError = RaggleProjectConfigParseError;
 function normalizeIgnoredSubpaths(input, fallback = []) {
     if (input === undefined)
         return fallback;
@@ -57,7 +65,8 @@ function mergeRaggleProjectConfig(repository, config) {
         tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
         folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
         subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
-        allSubpath: repository.allSubpath || config.allSubpath === true || config.allSubpaths === true,
+        allSubpath: repository.allSubpath || config.allSubpaths === true,
+        allTopLevelFolders: repository.allTopLevelFolders || config.allTopLevelFolders === true,
         removePathFromName: repository.removePathFromName || config.removePathFromName === true,
     };
 }
@@ -82,12 +91,39 @@ function normalizeRaggleProjectConfig(parsed) {
         tags: (0, project_config_fields_1.normalizeTags)(parsed.tags),
         folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
         subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),
-        ...(typeof parsed.allSubpath === "boolean" ? { allSubpath: parsed.allSubpath } : {}),
         ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
+        ...(typeof parsed.allTopLevelFolders === "boolean" ? { allTopLevelFolders: parsed.allTopLevelFolders } : {}),
         ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
         ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
         excludeFolders: normalizeIgnoredSubpaths(parsed.excludeFolders),
     };
+}
+function jsonParseError(configPath, raw, error) {
+    const originalMessage = error instanceof Error ? error.message : String(error);
+    const positionMatch = originalMessage.match(/\bposition\s+(\d+)/i);
+    let offset = positionMatch ? Number.parseInt(positionMatch[1], 10) : undefined;
+    let reason = originalMessage
+        .replace(/^JSON\.parse:\s*/i, "")
+        .replace(/\s+at position\s+\d+(?:\s+\(line\s+\d+\s+column\s+\d+\))?\s*$/i, "");
+    if (offset !== undefined) {
+        let previous = offset - 1;
+        while (previous >= 0 && /\s/.test(raw[previous]))
+            previous -= 1;
+        if ((raw[offset] === "}" || raw[offset] === "]") && raw[previous] === ",") {
+            offset = previous;
+            reason = "Trailing commas are not valid JSON";
+        }
+    }
+    if (offset === undefined || !Number.isFinite(offset)) {
+        return new RaggleProjectConfigParseError(configPath, `Invalid Raggle config: ${configPath}\n${reason}`);
+    }
+    const lineStart = raw.lastIndexOf("\n", Math.max(0, offset - 1)) + 1;
+    const lineEnd = raw.indexOf("\n", offset);
+    const sourceLine = raw.slice(lineStart, lineEnd === -1 ? raw.length : lineEnd);
+    const line = raw.slice(0, offset).split("\n").length;
+    const column = offset - lineStart + 1;
+    const caret = `${" ".repeat(Math.max(0, column - 1))}^`;
+    return new RaggleProjectConfigParseError(configPath, `Invalid Raggle config: ${configPath}\n${reason} at line ${line}, column ${column}\n${sourceLine}\n${caret}`);
 }
 /** Returns undefined when a generic file (like index.json) is not a raggle config. */
 function parseRaggleProjectConfig(configPath, raw, requireMarker) {
@@ -96,13 +132,13 @@ function parseRaggleProjectConfig(configPath, raw, requireMarker) {
         parsed = JSON.parse(raw);
     }
     catch (error) {
-        console.warn(`Failed to read ${configPath}:`, error);
-        return {};
+        throw jsonParseError(configPath, raw, error);
     }
     if (requireMarker && !isRaggleConfigDocument(parsed))
         return undefined;
-    if (!parsed || typeof parsed !== "object")
-        return {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new RaggleProjectConfigParseError(configPath, `Invalid Raggle config: ${configPath}\nThe root value must be a JSON object`);
+    }
     return normalizeRaggleProjectConfig(parsed);
 }
 /** Config file names checked in order; the first file that exists wins. */
@@ -164,7 +200,8 @@ function raggleProjectConfigFromProjectActionConfigs(configs) {
         tags: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeTags)(config.tags)))],
         folders: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeFolders)(config.folders)))],
         subpaths: mergeConfiguredPaths([], configs.flatMap((config) => (0, project_subpaths_1.normalizeSubpaths)(config.subpaths))),
-        allSubpath: configs.some((config) => config.allSubpath === true),
+        allSubpaths: configs.some((config) => config.allSubpath === true),
+        allTopLevelFolders: configs.some((config) => config.allTopLevelFolders === true),
         removePathFromName: configs.some((config) => config.removePathFromName === true),
     };
 }
