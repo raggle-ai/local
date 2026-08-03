@@ -53,7 +53,7 @@
     "test:public-api": "npm run build && node scripts/test-public-api.mjs",
     "test:cli": "npm run build && node scripts/test-cli.mjs",
     "test:scanner": "npm run build && node scripts/test-scanner.mjs",
-    "test:pack-consumer": "node scripts/check-packed-consumer.mjs",
+    "test:pack-consumer": "npm run build && node scripts/check-packed-consumer.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "prettier --check \"src/**/*.ts\"",
     "fix-lint": "prettier --write \"src/**/*.ts\"",

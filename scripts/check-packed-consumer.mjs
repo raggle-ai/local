@@ -6,11 +6,16 @@ import { execFileSync } from "node:child_process";
 
 const repositoryRoot = process.cwd();
 const tempDirectory = mkdtempSync(path.join(os.tmpdir(), "raggle-local-packed-consumer-"));
-let tarballPath;
 
 try {
-  const packed = JSON.parse(execFileSync("npm", ["pack", "--json"], { cwd: repositoryRoot, encoding: "utf8" }));
-  tarballPath = path.join(repositoryRoot, packed[0].filename);
+  const packedFilename = execFileSync(
+    "npm",
+    ["pack", "--ignore-scripts", "--pack-destination", tempDirectory],
+    { cwd: repositoryRoot, encoding: "utf8" },
+  ).trim();
+  assert.equal(path.basename(packedFilename), packedFilename, "npm pack returned an invalid filename");
+  assert.match(packedFilename, /\.tgz$/, "npm pack did not produce a tarball");
+  const tarballPath = path.join(tempDirectory, packedFilename);
   const consumerDirectory = path.join(tempDirectory, "consumer");
 
   mkdirSync(consumerDirectory, { recursive: true });
@@ -99,5 +104,4 @@ try {
   console.log("packed consumer checks passed");
 } finally {
   rmSync(tempDirectory, { recursive: true, force: true });
-  if (tarballPath) rmSync(tarballPath, { force: true });
 }
