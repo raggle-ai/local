@@ -22,7 +22,7 @@ try {
         schemaVersion: 1,
         name: "Raycast Essentials",
         tags: ["raycast"],
-        allSubpaths: true,
+        collapseSubpaths: true,
         ignoredSubpaths: ["cache"],
         excludeFolders: ["scripts"],
       },
@@ -40,14 +40,14 @@ try {
   mkdirSync(path.join(worktree, "workspace", "apps", "generated"));
   writeFileSync(
     path.join(worktree, "workspace", "raggle.json"),
-    JSON.stringify({ allSubpaths: true, ignoredSubpaths: ["generated"] }),
+    JSON.stringify({ collapseSubpaths: true, ignoredSubpaths: ["generated"] }),
   );
   mkdirSync(path.join(worktree, "scripts"));
 
   const config = readRaggleProjectConfig(worktree);
   assert.equal("name" in config, false);
   assert.deepEqual(config.tags, ["raycast"]);
-  assert.equal(config.allSubpaths, true);
+  assert.equal(config.collapseSubpaths, true);
   assert.deepEqual(config.ignoredSubpaths, ["cache"]);
   assert.deepEqual(config.excludeFolders, ["scripts"]);
 
@@ -69,7 +69,7 @@ try {
   assert.deepEqual([...new Set(updateNames)], ["raycast-essentials"]);
   assert.ok(
     projects.some((item) => item.relativePath === "commands"),
-    "Expected allSubpaths to make an unlisted child folder searchable",
+    "Expected collapseSubpaths to make an unlisted child folder searchable",
   );
   assert.equal(
     projects.some((item) => item.relativePath === "scripts"),
@@ -78,16 +78,16 @@ try {
   );
   assert.ok(
     projects.some((item) => item.relativePath === "commands/scripts"),
-    "Expected allSubpaths to expand child folders",
+    "Expected collapseSubpaths to expand child folders",
   );
   assert.ok(
     projects.some((item) => item.relativePath === "commands/scripts/deep"),
-    "Expected allSubpaths to recursively expand folders at every depth",
+    "Expected collapseSubpaths to recursively expand folders at every depth",
   );
   assert.equal(
     projects.some((item) => item.relativePath === "commands/cache"),
     false,
-    "Expected root ignoredSubpaths to apply inside nested allSubpaths folders",
+    "Expected root ignoredSubpaths to apply inside collapsed subpath folders",
   );
   assert.equal(
     projects.some((item) => item.relativePath?.split("/").some((segment) => segment.startsWith("_"))),
@@ -96,7 +96,7 @@ try {
   );
   assert.ok(
     projects.some((item) => item.relativePath === "workspace/apps/web"),
-    "Expected allSubpaths in a nested folder config to expand that folder's descendants",
+    "Expected collapseSubpaths in a nested folder config to expand that folder's descendants",
   );
   assert.equal(
     projects.some((item) => item.relativePath === "workspace/apps/generated"),
@@ -117,23 +117,45 @@ try {
   const comparisonRepositories = loadImportedRepositoriesFromRows([
     { url: "https://github.com/raggle-ai/scope-comparison.git" },
   ]);
-  writeFileSync(
-    path.join(comparisonWorktree, "raggle.json"),
-    JSON.stringify({ allTopLevelFolders: true }),
-  );
+  writeFileSync(path.join(comparisonWorktree, "raggle.json"), JSON.stringify({ allTopLevelFolders: true }));
   const topLevelProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
   const topLevelPaths = topLevelProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
   assert.deepEqual(topLevelPaths, ["alpha", "beta"]);
 
   writeFileSync(path.join(comparisonWorktree, "raggle.json"), JSON.stringify({ allSubpaths: true }));
-  const allSubpathProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
-  const allSubpathPaths = allSubpathProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
-  assert.deepEqual(allSubpathPaths, ["alpha", "alpha/one", "alpha/one/deep", "beta", "beta/two"]);
+  assert.equal(readRaggleProjectConfig(comparisonWorktree).allTopLevelFolders, true);
+  const shimProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
+  const shimPaths = shimProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
+  assert.deepEqual(shimPaths, topLevelPaths);
+
+  writeFileSync(path.join(comparisonWorktree, "raggle.json"), JSON.stringify({ collapseSubpaths: true }));
+  const collapsedProjects = await loadLocalProjects(comparisonRepositories, { cloneDirectory, force: true });
+  const collapsedPaths = collapsedProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
+  assert.deepEqual(collapsedPaths, ["alpha", "alpha/one", "alpha/one/deep", "beta", "beta/two"]);
   assert.equal(topLevelPaths.length, 2);
-  assert.equal(allSubpathPaths.length, 5);
-  console.log(
-    `scope comparison: allTopLevelFolders=${topLevelPaths.length}, allSubpaths=${allSubpathPaths.length}`,
-  );
+  assert.equal(collapsedPaths.length, 5);
+
+  writeFileSync(path.join(comparisonWorktree, "raggle.json"), "{}");
+  const remoteShimRepositories = loadImportedRepositoriesFromRows([
+    { url: "https://github.com/raggle-ai/scope-comparison.git", allSubpath: true },
+  ]);
+  const remoteShimProjects = await loadLocalProjects(remoteShimRepositories, { cloneDirectory, force: true });
+  const remoteShimPaths = remoteShimProjects.flatMap((item) => (item.relativePath ? [item.relativePath] : [])).sort();
+  assert.deepEqual(remoteShimPaths, topLevelPaths);
+
+  const remoteCollapsedRepositories = loadImportedRepositoriesFromRows([
+    { url: "https://github.com/raggle-ai/scope-comparison.git", collapseSubpaths: true },
+  ]);
+  const remoteCollapsedProjects = await loadLocalProjects(remoteCollapsedRepositories, {
+    cloneDirectory,
+    force: true,
+  });
+  const remoteCollapsedPaths = remoteCollapsedProjects
+    .flatMap((item) => (item.relativePath ? [item.relativePath] : []))
+    .sort();
+  assert.deepEqual(remoteCollapsedPaths, collapsedPaths);
+
+  console.log(`scope comparison: allSubpaths=${shimPaths.length}, collapseSubpaths=${collapsedPaths.length}`);
 
   const invalidConfigDirectory = path.join(cloneDirectory, "invalid-config");
   mkdirSync(invalidConfigDirectory);

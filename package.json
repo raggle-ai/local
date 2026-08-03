@@ -1,6 +1,6 @@
 {
   "name": "@raggle-ai/local",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Local project discovery and expansion logic for Raggle",
   "license": "MIT",
   "author": "Andrew Maguire",
@@ -68,6 +68,9 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.3"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.8.2",

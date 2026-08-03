@@ -46,13 +46,10 @@ import {
 import { defaultOpenInOption } from "./lib/open-in";
 import { showMoveFavoriteToast, showToggleFavoriteToast } from "./lib/favorites";
 import {
-  initialFavoriteProjectRenderLimit,
-  initialNonFavoriteProjectRenderLimit,
-  initialSearchProjectRenderLimit,
+  applyLocalProjectDelta,
   mergeIgnoredSubpaths,
   mergeRaggleProjectConfig,
   mergeExistingSubpathSettings,
-  nextProjectRenderLimit,
   normalizeSubpaths,
   normalizeSubpathPath,
   normalizeSubpathPaths,
@@ -67,9 +64,20 @@ import { projectKeywords, projectTitle } from "./lib/project";
 import {
   buildProjectSearchIndex,
   evaluateProjectSearchEntry,
+  initialFavoriteProjectRenderLimit,
+  initialNonFavoriteProjectRenderLimit,
+  initialSearchProjectRenderLimit,
+  nextProjectRenderLimit,
   parseProjectSearch,
   projectSearchCanNarrow,
   projectUsernameListItems,
+  localProjectToRaycastProject,
+  preserveProjectOrder,
+  readLastRaycastProjectsSnapshot,
+  readRaycastProjectsSnapshot,
+  writeRaycastProjectListState,
+  writeRaycastProjectsSnapshot,
+  type RaycastProject,
 } from "@raggle-ai/raycast-adapter";
 import { useAiChatClientRegistry } from "./hooks/use-ai-chat-clients";
 import { loadProjectActionPluginConfigs } from "./lib/project-action-plugin-loader";
@@ -81,12 +89,6 @@ import {
   upsertTursoProjectRow,
 } from "./lib/project-source/turso-source";
 import {
-  readLastStandardProjectsSnapshot,
-  readStandardProjectsSnapshot,
-  writeStandardProjectListState,
-  writeStandardProjectsSnapshot,
-} from "./lib/standard-project-cache";
-import {
   loadStandardProjects,
   readCachedProjectsByWorktree,
   sortStandardProjects,
@@ -97,9 +99,9 @@ import {
   readProjectSourceRows,
   standardProjectsSourceKey,
 } from "./lib/standard-project-source";
-import { type StandardProject } from "./lib/standard-project-metadata";
 import { needsTursoProjectSourceSetup } from "./lib/turso-project-source-setup";
-import { mergeProgressiveProjectUpdate, preserveProjectOrder } from "./lib/stable-project-order";
+
+type StandardProject = RaycastProject;
 
 function nowMs() {
   return Date.now();
@@ -207,8 +209,8 @@ export default function Command() {
   const ignoredSubpathsKey = preferences.globalIgnoredSubpaths?.join("\n") ?? "";
   const projectActionsDirectoryKey = preferences.projectActionsDirectory?.join("\n") ?? "";
   const initialSourceKey = standardProjectsSourceKey(extensionPreferences);
-  const initialSnapshot = readStandardProjectsSnapshot(initialSourceKey);
-  const lastSnapshot = readLastStandardProjectsSnapshot(initialSourceKey);
+  const initialSnapshot = readRaycastProjectsSnapshot(initialSourceKey);
+  const lastSnapshot = readLastRaycastProjectsSnapshot(initialSourceKey);
   const initialItems = initialSnapshot?.items ?? lastSnapshot?.items ?? [];
   const [openInTarget, setOpenInTarget] = useState<OpenInTarget>(
     () => defaultOpenInOption(preferences.openInTarget).target,
@@ -238,7 +240,7 @@ export default function Command() {
 
   useEffect(() => {
     if (favouriteState.isLoading || state.items.length === 0) return;
-    writeStandardProjectListState({
+    writeRaycastProjectListState({
       favoriteWorktrees: favouriteState.favourites,
       recentSelectionWorktrees: favouriteState.recentSelections,
     });
@@ -472,7 +474,7 @@ export default function Command() {
         items: nextItems,
       };
     });
-    writeStandardProjectsSnapshot(sourceKey, nextItems);
+    writeRaycastProjectsSnapshot(sourceKey, nextItems);
 
     return nextItem;
   }
@@ -591,11 +593,14 @@ export default function Command() {
       const items = await loadStandardProjects(sourceKey, configuredRepositories, preferences.cloneDirectory, {
         force: options?.force,
         ignoredSubpaths,
-        onUpdate: (updated) => {
+        onUpdate: (_updated, update) => {
           // Progressive package updates are partial; retain warm subpaths until the complete result arrives.
           setState((current) => ({
             ...current,
-            items: mergeProgressiveProjectUpdate(current.items, sortStandardProjects(updated)),
+            items: applyLocalProjectDelta(current.items, {
+              ...update.delta,
+              upserted: update.delta.upserted.map(localProjectToRaycastProject),
+            }),
             loading: false,
           }));
         },
@@ -1072,7 +1077,7 @@ export default function Command() {
         const storedPreferences = standardProjectsPreferencesWithOverrides(storedSettings);
         const storedSourceKey = standardProjectsSourceKey(storedPreferences);
         const storedSnapshot =
-          readStandardProjectsSnapshot(storedSourceKey) ?? readLastStandardProjectsSnapshot(storedSourceKey);
+          readRaycastProjectsSnapshot(storedSourceKey) ?? readLastRaycastProjectsSnapshot(storedSourceKey);
         if (storedSnapshot?.items.length) {
           setState((current) => ({
             ...current,

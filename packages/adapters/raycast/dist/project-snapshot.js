@@ -4,6 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.raggleProjectSnapshotPath = raggleProjectSnapshotPath;
+exports.readRaycastProjectsSnapshot = readRaycastProjectsSnapshot;
+exports.readLastRaycastProjectsSnapshot = readLastRaycastProjectsSnapshot;
+exports.writeRaycastProjectsSnapshot = writeRaycastProjectsSnapshot;
+exports.writeRaycastProjectListState = writeRaycastProjectListState;
 exports.readRaggleProjectListSnapshot = readRaggleProjectListSnapshot;
 exports.readRaggleProjectSnapshot = readRaggleProjectSnapshot;
 const api_1 = require("@raycast/api");
@@ -11,6 +15,7 @@ const node_fs_1 = require("node:fs");
 const node_path_1 = __importDefault(require("node:path"));
 const defaultRaggleExtensionName = "raggle";
 const snapshotFilename = "standard-projects-snapshot.json";
+const projectSnapshotMemoryCache = new Map();
 function isRaycastProject(value) {
     if (!value || typeof value !== "object")
         return false;
@@ -33,6 +38,95 @@ function raggleProjectSnapshotPath(options = {}) {
 }
 function stringArray(value) {
     return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : undefined;
+}
+function sourceMtimeMs(sourceFile) {
+    try {
+        return (0, node_fs_1.statSync)(sourceFile).mtimeMs;
+    }
+    catch {
+        return undefined;
+    }
+}
+function parseStoredSnapshot(snapshotPath) {
+    let snapshot;
+    try {
+        snapshot = JSON.parse((0, node_fs_1.readFileSync)(snapshotPath, "utf8"));
+    }
+    catch {
+        return undefined;
+    }
+    if (!Array.isArray(snapshot.items) || snapshot.items.some((item) => !isRaycastProject(item)))
+        return undefined;
+    if (typeof snapshot.sourceFile !== "string")
+        return undefined;
+    return {
+        schemaVersion: typeof snapshot.schemaVersion === "number" ? snapshot.schemaVersion : 1,
+        sourceFile: snapshot.sourceFile,
+        sourceMtimeMs: typeof snapshot.sourceMtimeMs === "number" ? snapshot.sourceMtimeMs : undefined,
+        generatedAt: typeof snapshot.generatedAt === "number" ? snapshot.generatedAt : 0,
+        items: snapshot.items,
+        listState: parseListState(snapshot.listState),
+    };
+}
+function isValidSnapshot(snapshot, sourceFile) {
+    if (!snapshot || snapshot.sourceFile !== sourceFile)
+        return false;
+    if (snapshot.sourceMtimeMs === undefined)
+        return true;
+    return sourceMtimeMs(sourceFile) === snapshot.sourceMtimeMs;
+}
+function readRaycastProjectsSnapshot(sourceFile, options = {}) {
+    const snapshotPath = raggleProjectSnapshotPath(options);
+    const cachedSnapshot = projectSnapshotMemoryCache.get(snapshotPath);
+    if (cachedSnapshot && isValidSnapshot(cachedSnapshot, sourceFile))
+        return cachedSnapshot;
+    const snapshot = parseStoredSnapshot(snapshotPath);
+    if (!snapshot || !isValidSnapshot(snapshot, sourceFile))
+        return undefined;
+    projectSnapshotMemoryCache.set(snapshotPath, snapshot);
+    return snapshot;
+}
+function readLastRaycastProjectsSnapshot(sourceFile, options = {}) {
+    const snapshotPath = raggleProjectSnapshotPath(options);
+    const cachedSnapshot = projectSnapshotMemoryCache.get(snapshotPath);
+    if (cachedSnapshot?.sourceFile === sourceFile)
+        return cachedSnapshot;
+    const snapshot = parseStoredSnapshot(snapshotPath);
+    if (!snapshot || snapshot.sourceFile !== sourceFile)
+        return undefined;
+    projectSnapshotMemoryCache.set(snapshotPath, snapshot);
+    return snapshot;
+}
+function writeRaycastProjectsSnapshot(sourceFile, items, options = {}) {
+    const snapshotPath = raggleProjectSnapshotPath(options);
+    const storedSnapshot = parseStoredSnapshot(snapshotPath);
+    const snapshot = {
+        schemaVersion: 2,
+        sourceFile,
+        sourceMtimeMs: sourceMtimeMs(sourceFile),
+        generatedAt: Date.now(),
+        items,
+        listState: storedSnapshot?.listState,
+    };
+    (0, node_fs_1.mkdirSync)(node_path_1.default.dirname(snapshotPath), { recursive: true });
+    (0, node_fs_1.writeFileSync)(snapshotPath, JSON.stringify(snapshot), "utf8");
+    projectSnapshotMemoryCache.set(snapshotPath, snapshot);
+    return snapshot;
+}
+function writeRaycastProjectListState(listState, options = {}) {
+    const snapshotPath = raggleProjectSnapshotPath(options);
+    const snapshot = parseStoredSnapshot(snapshotPath);
+    if (!snapshot)
+        return undefined;
+    const nextSnapshot = {
+        ...snapshot,
+        schemaVersion: 2,
+        listState: { ...listState, updatedAt: Date.now() },
+    };
+    (0, node_fs_1.mkdirSync)(node_path_1.default.dirname(snapshotPath), { recursive: true });
+    (0, node_fs_1.writeFileSync)(snapshotPath, JSON.stringify(nextSnapshot), "utf8");
+    projectSnapshotMemoryCache.set(snapshotPath, nextSnapshot);
+    return nextSnapshot;
 }
 function parseListState(value) {
     if (!value || typeof value !== "object")

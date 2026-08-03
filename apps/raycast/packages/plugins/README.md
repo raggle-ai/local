@@ -63,6 +63,7 @@ export const projectConfig = defineProjectConfig({
   folders: ["packages/app"],
   subpaths: ["apps", { path: "packages", removePathFromName: true }],
   allSubpath: false,
+  collapseSubpaths: true,
   ignoredSubpaths: ["meetings", "notes", "scripts"],
 });
 ```

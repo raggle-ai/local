@@ -28,7 +28,10 @@ function readProjectCountFromSupportFile(filePath) {
   return undefined;
 }
 
-const limitsSource = readFileSync(path.join(__dirname, "../src/lib/project-list-limits.ts"), "utf8");
+const limitsSource = readFileSync(
+  path.join(__dirname, "../../../packages/adapters/raycast/src/project-list-limits.ts"),
+  "utf8",
+);
 const initialFavoriteProjectRenderLimit = exportedNumberConstant(limitsSource, "initialFavoriteProjectRenderLimit");
 const initialNonFavoriteProjectRenderLimit = exportedNumberConstant(
   limitsSource,

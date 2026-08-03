@@ -6,6 +6,8 @@ This project loosely follows Keep a Changelog and uses semantic versioning as a 
 
 ## [Unreleased]
 
+- Move reusable folder-discovery metadata merging and repository parsing into `@raggle-ai/local`, and move Raycast snapshots and list ordering into `@raggle-ai/raycast-adapter`.
+- Consume the local workspace packages directly so Raycast development and CI cannot silently use stale published implementations.
 - `projects`: honor nested folder `allSubpaths` configs so their direct child folders are searchable.
 - `projects`: repository root rows that have subpath children now show a leading star marker so the main repo is easier to distinguish in search results.
 - Replace the vendored local-discovery package with the published `@raggle-ai/local` dependency.

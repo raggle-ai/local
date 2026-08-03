@@ -36,7 +36,7 @@ Bind the Raycast `Projects` command to `Cmd+Option+P`:
 - Use `Cmd+Shift+,` for command settings.
 - Use `Cmd+Option+,` for per-project or subpath settings.
 
-Project entries can set `allSubpath: true` to include readable top-level folders as separate searchable rows. A cloned repository can also define a repository-local `raggle.json` with default searchable folders:
+Project entries can set `allSubpath: true` to include readable top-level folders as separate searchable rows. Repository-local `raggle.json` files can use `allSubpaths: true` as the equivalent shorthand, or `collapseSubpaths: true` to recursively include every eligible descendant. A cloned repository can also define default searchable folders:
 
 ```json
 {

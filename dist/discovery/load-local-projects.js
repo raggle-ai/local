@@ -14,7 +14,7 @@ const project_subpaths_1 = require("../core/project-subpaths");
 const git_repository_1 = require("../adapters/git-repository");
 const project_remote_1 = require("../core/project-remote");
 const raggle_project_config_1 = require("../adapters/raggle-project-config");
-const standard_project_clone_index_1 = require("../cache/standard-project-clone-index");
+const clone_directory_repository_index_1 = require("../cache/clone-directory-repository-index");
 const project_keywords_1 = require("../core/project-keywords");
 Object.defineProperty(exports, "projectKeywords", { enumerable: true, get: function () { return project_keywords_1.projectKeywords; } });
 Object.defineProperty(exports, "standardProjectWithKeywords", { enumerable: true, get: function () { return project_keywords_1.standardProjectWithKeywords; } });
@@ -134,6 +134,7 @@ function normalizeRemoteProject(repository) {
         tags: repository.tags ?? [],
         subpaths: repository.subpaths ?? [],
         allSubpath: repository.allSubpath ?? false,
+        collapseSubpaths: repository.collapseSubpaths ?? false,
         allTopLevelFolders: repository.allTopLevelFolders ?? false,
         folders: repository.folders ?? [],
         plugins: repository.plugins ?? [],
@@ -290,10 +291,10 @@ async function localConfigSubpaths(session, rootPath, subpaths, markerFiles) {
             if (!result)
                 continue;
             const { parentSubpath, config, discoveredSubpaths } = result;
-            const allSubpaths = config.allSubpaths === true
+            const collapsedSubpaths = config.collapseSubpaths === true
                 ? await discoverAllFolderSubpaths(session, rootPath, parentSubpath.path, config.removePathFromName ?? parentSubpath.removePathFromName)
                 : [];
-            const allTopLevelFolders = config.allTopLevelFolders
+            const allTopLevelFolders = config.allTopLevelFolders || config.allSubpaths
                 ? (await readTopLevelSubpathDirectories(session, subpathDirectory(rootPath, parentSubpath))).map((directory) => ({
                     path: nestedSubpathPath(parentSubpath.path, node_path_1.default.basename(directory)),
                     allSubpath: false,
@@ -308,7 +309,7 @@ async function localConfigSubpaths(session, rootPath, subpaths, markerFiles) {
                 ...childSubpath,
                 path: nestedSubpathPath(parentSubpath.path, childSubpath.path),
             }));
-            for (const childSubpath of [...configuredChildren, ...allSubpaths, ...discoveredChildren]) {
+            for (const childSubpath of [...configuredChildren, ...collapsedSubpaths, ...discoveredChildren]) {
                 const childPath = childSubpath.path;
                 if (subpathsByPath.has(childPath))
                     continue;
@@ -360,6 +361,7 @@ function subpathProject(parent, worktree, displayPath, removePathFromName, subpa
         remoteUrl: parent.remoteUrl,
         browserUrl: parent.browserUrl,
         allSubpath: parent.allSubpath,
+        collapseSubpaths: parent.collapseSubpaths,
         allTopLevelFolders: parent.allTopLevelFolders,
         hasCustomName: parent.hasCustomName,
         remoteMismatch: parent.remoteMismatch,
@@ -421,6 +423,7 @@ function baseLocalProject(repository, cloneDirectory, cachedProjectsByWorktree, 
         browserUrl: (0, project_remote_1.remoteToBrowserUrl)(repository.remoteUrl),
         removePathFromName: repository.removePathFromName,
         allSubpath: repository.allSubpath,
+        collapseSubpaths: repository.collapseSubpaths,
         allTopLevelFolders: repository.allTopLevelFolders,
         isCloned,
     });
@@ -432,7 +435,7 @@ async function resolveLocalProject(session, repository, cloneDirectory, cachedPr
         worktreeByRepositoryKey: new Map(),
         remoteUrlByWorktree: new Map(),
     };
-    const localResult = await (0, standard_project_clone_index_1.findLocalRepository)(repository.remoteUrl, expectedDirectory, repositoryIndex);
+    const localResult = await (0, clone_directory_repository_index_1.findLocalRepository)(repository.remoteUrl, expectedDirectory, repositoryIndex);
     const localPath = localResult?.isMatch || localResult?.worktree === expectedDirectory ? localResult.worktree : undefined;
     const repositoryRoot = localPath ?? expectedDirectory;
     const resolvedRepository = localPath
@@ -503,7 +506,11 @@ async function inheritedIgnoredSubpaths(session, rootPath, relativePath, rootIgn
 }
 async function loadResolvedLocalProjectSubpaths(session, resolvedProject, repository, cachedProjectsByWorktree, markerFiles, options) {
     const hasCustomMarkers = Boolean(options?.subpathMarkerFiles?.length);
-    if ((!repository.subpaths.length && !repository.allSubpath && !repository.allTopLevelFolders && !hasCustomMarkers) ||
+    if ((!repository.subpaths.length &&
+        !repository.allSubpath &&
+        !repository.collapseSubpaths &&
+        !repository.allTopLevelFolders &&
+        !hasCustomMarkers) ||
         !resolvedProject.localPath) {
         return [];
     }
@@ -514,15 +521,16 @@ async function loadResolvedLocalProjectSubpaths(session, resolvedProject, reposi
     const rootExcludedFolders = rootConfig.excludeFolders ?? [];
     const configuredFolderWorktrees = new Set(resolvedProject.configuredFolders.map((folder) => folder.worktree));
     // Custom marker files extend discovery to repositories that opted in with a
-    // recognized root config file but did not set allSubpath or list the folders
+    // recognized root config file but did not enable folder discovery or list the folders
     // explicitly.
     const discoverRootSubpaths = repository.allSubpath ||
+        repository.collapseSubpaths ||
         repository.allTopLevelFolders ||
         (hasCustomMarkers && rootConfigResolution.configPath !== undefined);
-    const rootAllSubpaths = repository.allSubpath
+    const rootCollapsedSubpaths = repository.collapseSubpaths
         ? await discoverAllFolderSubpaths(session, localPath, ".", resolvedProject.item.removePathFromName ?? false)
         : [];
-    const rootTopLevelFolders = repository.allTopLevelFolders
+    const rootTopLevelFolders = repository.allTopLevelFolders || repository.allSubpath
         ? (await readTopLevelSubpathDirectories(session, localPath)).map((directory) => ({
             path: relativeSubpath(localPath, directory),
             allSubpath: false,
@@ -532,7 +540,7 @@ async function loadResolvedLocalProjectSubpaths(session, resolvedProject, reposi
     const rootDiscoveredSubpaths = discoverRootSubpaths
         ? await discoverConfigSubpaths(session, localPath, markerFiles, resolvedProject.item.removePathFromName ?? false)
         : [];
-    const configuredSubpaths = await localConfigSubpaths(session, localPath, [...rootAllSubpaths, ...rootDiscoveredSubpaths, ...repository.subpaths], markerFiles);
+    const configuredSubpaths = await localConfigSubpaths(session, localPath, [...rootCollapsedSubpaths, ...rootDiscoveredSubpaths, ...repository.subpaths], markerFiles);
     for (const folder of rootTopLevelFolders) {
         if (!configuredSubpaths.some((subpath) => subpath.path === folder.path))
             configuredSubpaths.push(folder);
@@ -582,7 +590,7 @@ async function loadLocalProjects(remoteProjects, options) {
     ];
     const repositoryIndexByParentDirectory = new Map(await Promise.all(cloneParentDirectories.map(async (directory) => [
         directory,
-        await (0, standard_project_clone_index_1.prepareCloneDirectoryIndex)(directory, {
+        await (0, clone_directory_repository_index_1.prepareCloneDirectoryIndex)(directory, {
             force: options.force,
             cachePath: options.cloneIndexCachePath,
             scannedRepositories: directory === cloneDirectory ? options.scannedRepositories : undefined,

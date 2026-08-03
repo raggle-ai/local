@@ -12,8 +12,11 @@ Module._load = (request, parent, isMain) => {
 };
 const {
   raggleProjectSnapshotPath,
+  readRaycastProjectsSnapshot,
   readRaggleProjectListSnapshot,
   readRaggleProjectSnapshot,
+  writeRaycastProjectListState,
+  writeRaycastProjectsSnapshot,
 } = require("../dist/project-snapshot");
 Module._load = originalLoad;
 
@@ -99,5 +102,38 @@ test("reads validated projects from the snapshot", () => {
     assert.equal(readRaggleProjectSnapshot({ snapshotPath: fixturePath }).length, 1);
   } finally {
     rmSync(path.dirname(fixturePath), { recursive: true });
+  }
+});
+
+test("writes and validates the Raycast project snapshot contract", () => {
+  const fixtureDirectory = path.join(tmpdir(), `raggle-project-snapshot-store-${process.pid}`);
+  const fixturePath = path.join(fixtureDirectory, "snapshot.json");
+  const sourcePath = path.join(fixtureDirectory, "projects.json");
+  const project = {
+    id: "project-1",
+    worktree: "/tmp/project-1",
+    remoteUrl: "https://github.com/raggle-ai/project-1",
+    repositoryRoot: "/tmp/project-1",
+    sandboxCount: 0,
+    hasIcon: false,
+    isSessionOnly: false,
+    isFavorite: false,
+    relatedIds: [],
+    isCloned: true,
+  };
+  mkdirSync(fixtureDirectory, { recursive: true });
+  writeFileSync(sourcePath, "[]");
+
+  try {
+    writeRaycastProjectsSnapshot(sourcePath, [project], { snapshotPath: fixturePath });
+    writeRaycastProjectListState(
+      { favoriteWorktrees: [project.worktree], recentSelectionWorktrees: [] },
+      { snapshotPath: fixturePath },
+    );
+    const snapshot = readRaycastProjectsSnapshot(sourcePath, { snapshotPath: fixturePath });
+    assert.equal(snapshot.items.length, 1);
+    assert.deepEqual(snapshot.listState.favoriteWorktrees, [project.worktree]);
+  } finally {
+    rmSync(fixtureDirectory, { recursive: true, force: true });
   }
 });

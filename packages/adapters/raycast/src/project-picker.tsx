@@ -1,13 +1,13 @@
 import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { RaycastProject } from "./index";
 import {
   initialFavoriteProjectRenderLimit,
   initialNonFavoriteProjectRenderLimit,
   initialSearchProjectRenderLimit,
   nextProjectRenderLimit,
-} from "@raggle-ai/local";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import type { RaycastProject } from "./index";
+} from "./project-list-limits";
 import {
   buildProjectSearchIndex,
   evaluateProjectSearchEntry,

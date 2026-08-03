@@ -1,11 +1,13 @@
 {
+  "$schema": "https://raggle.co/config.json",
+  "schemaVersion": 1,
   "subpaths": [
     {
       "path": "apps",
       "allSubpath": true
     },
     {
-      "path": "packages/adapters",
+      "path": "packages",
       "allSubpath": true
     }
   ]

@@ -1,21 +1,15 @@
-import path from "node:path";
-import { maxProgressiveIconHydrationProjects, projectKeywords, standardProjectWithKeywords } from "@raggle-ai/local";
-import { discoverProjectIcon, hydrateProjectIcons, type Project } from "./project-store";
-import { type StandardProjectSnapshotItem } from "./standard-project-cache";
-
-export type StandardProject = StandardProjectSnapshotItem;
+import {
+  mergeLocalProjectMetadata,
+  projectKeywords,
+  standardProjectWithKeywords,
+  type LocalProject,
+} from "@raggle-ai/local";
+import { maxProgressiveIconHydrationProjects } from "@raggle-ai/raycast-adapter";
+import { discoverProjectIcon, hydrateProjectIcons } from "./project-store";
 
 export { projectKeywords, standardProjectWithKeywords };
 
-function resolvedProjectName(item: StandardProject, hydratedItem?: Project) {
-  if (item.relativePath || item.hasCustomName) {
-    return item.name;
-  }
-
-  return hydratedItem?.name;
-}
-
-function iconOwnerWorktrees(items: StandardProject[]) {
+function iconOwnerWorktrees(items: LocalProject[]) {
   const worktrees = new Set<string>();
 
   for (const item of items) {
@@ -32,81 +26,20 @@ function iconOwnerWorktrees(items: StandardProject[]) {
   return worktrees;
 }
 
-function branchIconOwnerItems(items: StandardProject[], iconOwners: Set<string>) {
+function branchIconOwnerItems(items: LocalProject[], iconOwners: Set<string>) {
   return items.filter((item) => Boolean(item.relativePath) && iconOwners.has(item.worktree));
 }
 
-function rootIconOwnerItems(items: StandardProject[], iconOwners: Set<string>) {
+function rootIconOwnerItems(items: LocalProject[], iconOwners: Set<string>) {
   return items.filter((item) => !item.relativePath && iconOwners.has(item.worktree));
 }
 
-function nearestInheritedIconSource(
-  item: StandardProject,
-  itemsByWorktree: Map<string, StandardProject>,
-  hydratedByWorktree: Map<string, Project>,
-) {
-  if (!item.relativePath) return undefined;
-
-  let currentDirectory = path.dirname(item.worktree);
-  while (currentDirectory && currentDirectory !== item.worktree) {
-    if (itemsByWorktree.has(currentDirectory)) {
-      const hydrated = hydratedByWorktree.get(currentDirectory);
-      if (hydrated?.icon) return hydrated;
-    }
-
-    const nextDirectory = path.dirname(currentDirectory);
-    if (nextDirectory === currentDirectory) break;
-    currentDirectory = nextDirectory;
-  }
-
-  return hydratedByWorktree.get(item.repositoryRoot);
-}
-
-function hydratedStandardProject(
-  item: StandardProject,
-  itemsByWorktree: Map<string, StandardProject>,
-  hydratedByWorktree: Map<string, Project>,
-) {
-  const hydratedItem = hydratedByWorktree.get(item.worktree);
-  const inheritedIcon = nearestInheritedIconSource(item, itemsByWorktree, hydratedByWorktree);
-  if (!hydratedItem) {
-    if (!inheritedIcon?.icon) return item;
-
-    return standardProjectWithKeywords({
-      ...item,
-      icon: item.icon ?? inheritedIcon.icon,
-      iconColor: item.iconColor ?? inheritedIcon.iconColor,
-      tint: item.tint ?? inheritedIcon.tint,
-      hasIcon: item.hasIcon || Boolean(inheritedIcon.icon),
-    });
-  }
-
-  return standardProjectWithKeywords({
-    ...item,
-    name: resolvedProjectName(item, hydratedItem),
-    worktreeName: hydratedItem.worktreeName,
-    tags: hydratedItem.tags,
-    latestSessionTitle: hydratedItem.latestSessionTitle,
-    icon: hydratedItem.icon ?? inheritedIcon?.icon ?? item.icon,
-    iconColor: hydratedItem.iconColor ?? inheritedIcon?.iconColor ?? item.iconColor,
-    tint: hydratedItem.tint ?? inheritedIcon?.tint ?? item.tint,
-    startupCommand: hydratedItem.startupCommand,
-    sandboxCount: hydratedItem.sandboxCount,
-    updatedAt: hydratedItem.updatedAt,
-    hasIcon: hydratedItem.hasIcon || Boolean(inheritedIcon?.icon) || item.hasIcon,
-    isSessionOnly: hydratedItem.isSessionOnly,
-    isFavorite: hydratedItem.isFavorite,
-    relatedIds: hydratedItem.relatedIds,
-  });
-}
-
 export async function hydrateStandardProjectMetadata(
-  items: StandardProject[],
-  options?: { force?: boolean; onUpdate?: (items: StandardProject[]) => void },
+  items: LocalProject[],
+  options?: { force?: boolean; onUpdate?: (items: LocalProject[]) => void },
 ) {
   const onUpdate = options?.onUpdate;
   const hydrateProgressively = Boolean(onUpdate && items.length <= maxProgressiveIconHydrationProjects);
-  const itemsByWorktree = new Map(items.map((item) => [item.worktree, item]));
   const iconOwners = iconOwnerWorktrees(items);
   const hydratedBranchIconOwners = await hydrateProjectIcons(
     branchIconOwnerItems(items, iconOwners),
@@ -117,17 +50,10 @@ export async function hydrateStandardProjectMetadata(
     rootIconOwnerItems(items, iconOwners),
     hydrateProgressively
       ? (updated) => {
-          const updatedByWorktree = new Map(
-            [...hydratedBranchIconOwners, ...updated].map((item) => [item.worktree, item]),
-          );
-          onUpdate?.(items.map((item) => hydratedStandardProject(item, itemsByWorktree, updatedByWorktree)));
+          onUpdate?.(mergeLocalProjectMetadata(items, [...hydratedBranchIconOwners, ...updated]));
         }
       : undefined,
     options,
   );
-  const hydratedByWorktree = new Map(
-    [...hydratedBranchIconOwners, ...hydratedRootIconOwners].map((item) => [item.worktree, item]),
-  );
-
-  return items.map((item) => hydratedStandardProject(item, itemsByWorktree, hydratedByWorktree));
+  return mergeLocalProjectMetadata(items, [...hydratedBranchIconOwners, ...hydratedRootIconOwners]);
 }

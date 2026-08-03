@@ -125,7 +125,7 @@ function parseSubpathItems(input: string) {
 }
 
 function projectActionConfigFromObjectText(objectText: string): ProjectActionConfig | undefined {
-  const config: ProjectActionConfig = {};
+  const config: ProjectActionConfig & { collapseSubpaths?: boolean } = {};
 
   const ignoredSubpathsArrayMatch = /["']?ignoredSubpaths["']?\s*:\s*\[([\s\S]*?)\]/.exec(objectText);
   if (ignoredSubpathsArrayMatch) config.ignoredSubpaths = parseQuotedStrings(ignoredSubpathsArrayMatch[1]);
@@ -149,6 +149,9 @@ function projectActionConfigFromObjectText(objectText: string): ProjectActionCon
 
   const allSubpathMatch = /["']?allSubpath["']?\s*:\s*(true|false)\b/.exec(objectText);
   if (allSubpathMatch) config.allSubpath = allSubpathMatch[1] === "true";
+
+  const collapseSubpathsMatch = /["']?collapseSubpaths["']?\s*:\s*(true|false)\b/.exec(objectText);
+  if (collapseSubpathsMatch) config.collapseSubpaths = collapseSubpathsMatch[1] === "true";
 
   const removePathFromNameMatch = /["']?removePathFromName["']?\s*:\s*(true|false)\b/.exec(objectText);
   if (removePathFromNameMatch) config.removePathFromName = removePathFromNameMatch[1] === "true";

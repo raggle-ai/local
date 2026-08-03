@@ -23,13 +23,13 @@ Raggle is a Raycast extension for managing and executing reusable AI prompts fro
 │   │   ├── project-store.ts     # Project caching and hydration
 │   │   ├── standard-project-loader.ts  # Thin wrapper around @raggle-ai/local
 │   │   ├── opencode.ts          # IDE/terminal opening
-│   │   └── enhanced-list-order.ts   # Favorites ordering logic
+│   │   └── standard-project-loader.ts  # App composition over package and adapter
 │   ├── utils/               # Utilities
 │   │   └── remote-prompts.ts    # GitHub remote prompt loading
 │   └── config/              # Settings and preferences
 ├── packages/                # Shared packages
 │   ├── plugins/             # Plugin API for project actions
-│   └── (shared project search now lives in @raggle-ai/raycast-adapter)
+│   └── (shared project search, snapshots, and list ordering live in @raggle-ai/raycast-adapter)
 ├── docs/                    # Documentation
 │   ├── release.md           # Release process guide
 │   ├── list-ui.md           # List component docs

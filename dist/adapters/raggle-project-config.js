@@ -65,8 +65,12 @@ function mergeRaggleProjectConfig(repository, config) {
         tags: [...new Set([...(config.tags ?? []), ...repository.tags])],
         folders: [...new Set([...(config.folders ?? []), ...repository.folders])],
         subpaths: mergeConfiguredPaths(config.subpaths, repository.subpaths),
-        allSubpath: repository.allSubpath || config.allSubpaths === true,
-        allTopLevelFolders: repository.allTopLevelFolders || config.allTopLevelFolders === true,
+        allSubpath: repository.allSubpath,
+        collapseSubpaths: repository.collapseSubpaths || config.collapseSubpaths === true,
+        allTopLevelFolders: repository.allTopLevelFolders ||
+            repository.allSubpath ||
+            config.allTopLevelFolders === true ||
+            config.allSubpaths === true,
         removePathFromName: repository.removePathFromName || config.removePathFromName === true,
     };
 }
@@ -87,12 +91,19 @@ function requiresRaggleConfigMarker(configFile) {
     return GENERIC_PROJECT_CONFIG_FILES.has(node_path_1.default.basename(configFile));
 }
 function normalizeRaggleProjectConfig(parsed) {
+    const allSubpaths = typeof parsed.allSubpaths === "boolean" ? parsed.allSubpaths : undefined;
+    const allTopLevelFolders = parsed.allTopLevelFolders === true || allSubpaths === true
+        ? true
+        : parsed.allTopLevelFolders === false || allSubpaths === false
+            ? false
+            : undefined;
     return {
         tags: (0, project_config_fields_1.normalizeTags)(parsed.tags),
         folders: (0, project_config_fields_1.normalizeFolders)(parsed.folders),
         subpaths: (0, project_subpaths_1.normalizeSubpaths)(parsed.subpaths),
-        ...(typeof parsed.allSubpaths === "boolean" ? { allSubpaths: parsed.allSubpaths } : {}),
-        ...(typeof parsed.allTopLevelFolders === "boolean" ? { allTopLevelFolders: parsed.allTopLevelFolders } : {}),
+        ...(allSubpaths !== undefined ? { allSubpaths } : {}),
+        ...(typeof parsed.collapseSubpaths === "boolean" ? { collapseSubpaths: parsed.collapseSubpaths } : {}),
+        ...(allTopLevelFolders !== undefined ? { allTopLevelFolders } : {}),
         ...(typeof parsed.removePathFromName === "boolean" ? { removePathFromName: parsed.removePathFromName } : {}),
         ignoredSubpaths: normalizeIgnoredSubpaths(parsed.ignoredSubpaths),
         excludeFolders: normalizeIgnoredSubpaths(parsed.excludeFolders),
@@ -196,12 +207,14 @@ function ignoredSubpathsFromProjectActionConfigs(configs) {
     return mergeIgnoredSubpaths(...configs.map((config) => normalizeIgnoredSubpaths(config.ignoredSubpaths)));
 }
 function raggleProjectConfigFromProjectActionConfigs(configs) {
+    const allSubpaths = configs.some((config) => config.allSubpath === true);
     return {
         tags: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeTags)(config.tags)))],
         folders: [...new Set(configs.flatMap((config) => (0, project_config_fields_1.normalizeFolders)(config.folders)))],
         subpaths: mergeConfiguredPaths([], configs.flatMap((config) => (0, project_subpaths_1.normalizeSubpaths)(config.subpaths))),
-        allSubpaths: configs.some((config) => config.allSubpath === true),
-        allTopLevelFolders: configs.some((config) => config.allTopLevelFolders === true),
+        allSubpaths,
+        collapseSubpaths: configs.some((config) => config.collapseSubpaths === true),
+        allTopLevelFolders: allSubpaths || configs.some((config) => config.allTopLevelFolders === true),
         removePathFromName: configs.some((config) => config.removePathFromName === true),
     };
 }

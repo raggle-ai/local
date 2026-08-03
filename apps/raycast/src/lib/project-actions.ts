@@ -1,7 +1,7 @@
 import type { Action, ActionPanel, List } from "@raycast/api";
 import type { ComponentProps } from "react";
 import type { GitHubRepository, ProjectActionConfig } from "@raggle-ai/local";
-import type { StandardProjectSnapshotItem } from "./standard-project-cache";
+import type { RaycastProject } from "@raggle-ai/raycast-adapter";
 
 export type ProjectActionSection = "open-in" | "repository" | "custom";
 
@@ -20,7 +20,7 @@ export type ProjectActionItem = {
 };
 
 export type ProjectActionContext = {
-  project: StandardProjectSnapshotItem;
+  project: RaycastProject;
   name: string;
   folderPath: string;
   hasLocalProject: boolean;
