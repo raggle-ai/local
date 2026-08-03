@@ -206,6 +206,7 @@ fn scan(
         .filter_entry(should_visit);
 
     let repository_count = Arc::new(AtomicUsize::new(0));
+    let progress_lock = Arc::new(Mutex::new(()));
     let progress = progress.cloned();
     builder.build_parallel().run(|| {
         let repositories = Arc::clone(&repositories);
@@ -213,6 +214,7 @@ fn scan(
         let truncated = Arc::clone(&truncated);
         let timed_out = Arc::clone(&timed_out);
         let repository_count = Arc::clone(&repository_count);
+        let progress_lock = Arc::clone(&progress_lock);
         let progress = progress.clone();
 
         Box::new(move |entry| {
@@ -252,7 +254,18 @@ fn scan(
             }
 
             if let Some(callback) = progress.as_ref() {
+                let _progress_guard = progress_lock
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                if aborted.load(Ordering::Relaxed) {
+                    repository_count.fetch_sub(1, Ordering::Relaxed);
+                    return WalkState::Quit;
+                }
                 callback.call(repository.clone(), ThreadsafeFunctionCallMode::Blocking);
+                if let Ok(mut repositories) = repositories.lock() {
+                    repositories.push(repository);
+                }
+                return WalkState::Skip;
             }
             if let Ok(mut repositories) = repositories.lock() {
                 repositories.push(repository);
