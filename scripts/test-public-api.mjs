@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -8,6 +8,7 @@ import {
   githubCliPath,
   githubPullRequestsBrowserUrl,
   discoverProjectIcon,
+  discoverLocalProjects,
   mergeRaggleProjectConfig,
   readImportedRepositoryPlugins,
   raggleProjectConfigFromProjectActionConfigs,
@@ -76,6 +77,20 @@ try {
   assert.equal(plugins[0], path.resolve(tempDirectory, "plugins/local-plugin"));
   assert.equal(plugins[1], path.join(os.homedir(), "plugins/home-plugin"));
   assert.equal(plugins[2], "@raggle/plugin-a");
+
+  const cloneDirectory = path.join(tempDirectory, "clones");
+  const worktree = path.join(cloneDirectory, "example");
+  mkdirSync(path.join(worktree, ".git"), { recursive: true });
+  writeFileSync(
+    path.join(worktree, ".git", "config"),
+    '[remote "origin"]\n  url = https://github.com/raggle-ai/example.git\n',
+  );
+  writeFileSync(path.join(worktree, ".git", "HEAD"), "ref: refs/heads/main\n");
+
+  const discovered = await discoverLocalProjects({ cloneDirectory });
+  assert.equal(discovered.length, 1);
+  assert.equal(discovered[0].worktree, worktree);
+  assert.equal(discovered[0].name, "example");
 } finally {
   rmSync(tempDirectory, { recursive: true, force: true });
 }
