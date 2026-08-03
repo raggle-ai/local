@@ -139,7 +139,8 @@ async function indexCloneDirectoryRepositories(
   const startedAt = nowMs();
   const worktreeByRepositoryKey = new Map<string, string>();
   const remoteUrlByWorktree = new Map<string, string>();
-  const discoveredRepositories = scannedRepositories ?? scanCloneDirectoryRepositories(cloneDirectory).repositories;
+  const discoveredRepositories =
+    scannedRepositories ?? (await scanCloneDirectoryRepositories(cloneDirectory)).repositories;
   const candidates: string[] = [];
 
   if (discoveredRepositories.length) {

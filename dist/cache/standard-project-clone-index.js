@@ -91,7 +91,7 @@ async function indexCloneDirectoryRepositories(cloneDirectory, cachePath, scanne
     const startedAt = nowMs();
     const worktreeByRepositoryKey = new Map();
     const remoteUrlByWorktree = new Map();
-    const discoveredRepositories = scannedRepositories ?? (0, scanner_1.scanCloneDirectoryRepositories)(cloneDirectory).repositories;
+    const discoveredRepositories = scannedRepositories ?? (await (0, scanner_1.scanCloneDirectoryRepositories)(cloneDirectory)).repositories;
     const candidates = [];
     if (discoveredRepositories.length) {
         const entries = (0, local_repository_candidate_1.sortLocalRepositoryCandidates)(discoveredRepositories);

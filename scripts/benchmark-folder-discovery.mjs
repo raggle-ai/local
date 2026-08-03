@@ -5,6 +5,7 @@ import { performance } from "node:perf_hooks";
 import { scanCloneDirectoryRepositories } from "../dist/scanner.js";
 
 const repositoryCount = Number.parseInt(process.env.RAGGLE_BENCH_REPOS ?? "1000", 10);
+const directoryCount = Number.parseInt(process.env.RAGGLE_BENCH_DIRECTORIES ?? "10000", 10);
 const iterations = Number.parseInt(process.env.RAGGLE_BENCH_ITERATIONS ?? "5", 10);
 const warmup = Number.parseInt(process.env.RAGGLE_BENCH_WARMUP ?? "1", 10);
 const root = mkdtempSync(path.join(os.tmpdir(), "raggle-local-bench-"));
@@ -29,7 +30,7 @@ function summarize(samples) {
 
 try {
   for (let index = 0; index < repositoryCount; index += 1) {
-    const worktree = path.join(root, `owner-repo-${index}`);
+    const worktree = path.join(root, `owner-${index % 50}`, `repo-${index}`);
     const gitDirectory = path.join(worktree, ".git");
     mkdirSync(gitDirectory, { recursive: true });
     writeFileSync(
@@ -39,15 +40,20 @@ try {
     writeFileSync(path.join(gitDirectory, "HEAD"), "ref: refs/heads/main\n");
   }
 
+  for (let index = 0; index < directoryCount; index += 1) {
+    mkdirSync(path.join(root, "non-repositories", `group-${index % 100}`, `folder-${index}`), { recursive: true });
+  }
+
   for (let index = 0; index < warmup; index += 1) {
-    scanCloneDirectoryRepositories(root);
+    await scanCloneDirectoryRepositories(root, { maxDepth: 3, maxRepos: repositoryCount });
   }
 
   const samples = [];
   let repositories = [];
   for (let index = 0; index < iterations; index += 1) {
     const startedAt = performance.now();
-    repositories = scanCloneDirectoryRepositories(root).repositories;
+    repositories = (await scanCloneDirectoryRepositories(root, { maxDepth: 3, maxRepos: repositoryCount }))
+      .repositories;
     samples.push(performance.now() - startedAt);
   }
 
@@ -57,6 +63,7 @@ try {
     JSON.stringify(
       {
         repositories: repositories.length,
+        directories: directoryCount,
         iterations,
         warmup,
         durationMs: stats,

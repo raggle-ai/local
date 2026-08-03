@@ -1,0 +1,13 @@
+{
+  "name": "@raggle-ai/local-scanner",
+  "version": "0.1.0",
+  "private": true,
+  "napi": {
+    "binaryName": "raggle-local-scanner",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "x86_64-unknown-linux-gnu"
+    ]
+  }
+}

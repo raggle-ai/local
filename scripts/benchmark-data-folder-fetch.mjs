@@ -156,7 +156,7 @@ async function runIteration(rows, cloneDirectory, options, mode, outerSamples, i
     recordSample(outerSamples, "normalizeProjects", performance.now() - normalizeStartedAt);
 
     const scanStartedAt = performance.now();
-    const scanned = scanCloneDirectoryRepositories(cloneDirectory).repositories;
+    const scanned = (await scanCloneDirectoryRepositories(cloneDirectory)).repositories;
     recordSample(outerSamples, "scanCloneDirectoryRepositories", performance.now() - scanStartedAt);
 
     const loadStartedAt = performance.now();

@@ -253,8 +253,9 @@ async function main() {
   );
 
   const normalizeTiming = timed("normalizeProjects", () => loadImportedRepositoriesFromRows(fetchTiming.value));
-  const scanTiming = timed("scanCloneDirectoryRepositories", () =>
-    scanCloneDirectoryRepositories(cloneDirectory).repositories,
+  const scanTiming = await timedAsync(
+    "scanCloneDirectoryRepositories",
+    async () => (await scanCloneDirectoryRepositories(cloneDirectory)).repositories,
   );
   const loadTiming = await timedAsync("loadLocalProjects", () =>
     loadLocalProjects(normalizeTiming.value, {

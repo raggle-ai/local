@@ -30,11 +30,11 @@ function remoteProjects(repositories: DiscoveredRepository[]): RemoteProject[] {
   }));
 }
 
-function repositoryAtOrAbove(folder: string) {
+async function repositoryAtOrAbove(folder: string) {
   let directory = folder;
 
   while (true) {
-    const repository = discoverRepository(directory);
+    const repository = await discoverRepository(directory);
     if (repository) return repository;
 
     const parent = path.dirname(directory);
@@ -58,7 +58,7 @@ function isUnderFolder(project: LocalProject, folder: string) {
 /** Discovers cloned repositories and expands their configured Raggle folders. */
 export async function discoverLocalProjects(options: DiscoverLocalProjectsOptions): Promise<LocalProject[]> {
   const { cloneDirectory, scan: scanOptions, ...loadOptions } = options;
-  const scannedRepositories = scanCloneDirectoryRepositories(cloneDirectory, scanOptions).repositories;
+  const scannedRepositories = (await scanCloneDirectoryRepositories(cloneDirectory, scanOptions)).repositories;
 
   return loadLocalProjects(remoteProjects(scannedRepositories), {
     ...loadOptions,
@@ -73,7 +73,7 @@ export async function discoverLocalProjectsUnderFolder(
 ): Promise<LocalProject[]> {
   const { folder: inputFolder, scan: scanOptions, onUpdate, previousItems = [], ...loadOptions } = options;
   const folder = path.resolve(inputFolder);
-  const containingRepository = repositoryAtOrAbove(folder);
+  const containingRepository = await repositoryAtOrAbove(folder);
   const useFolderBoundary =
     containingRepository?.worktree !== folder && (await hasProjectConfig(folder, loadOptions.projectConfigFiles));
   const scopedRepository =
@@ -81,7 +81,7 @@ export async function discoverLocalProjectsUnderFolder(
   const cloneDirectory = scopedRepository ? path.dirname(scopedRepository.worktree) : folder;
   const scannedRepositories = scopedRepository
     ? [scopedRepository]
-    : scanCloneDirectoryRepositories(folder, scanOptions).repositories;
+    : (await scanCloneDirectoryRepositories(folder, scanOptions)).repositories;
   const scopedPreviousItems = previousItems.filter((project) => isUnderFolder(project, folder));
 
   const projects = await loadLocalProjects(remoteProjects(scannedRepositories), {

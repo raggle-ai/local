@@ -23,6 +23,7 @@ jobs:
       - run: npm run test:all
       - run: npm run test:updates
       - run: npm run test:project-config
+      - run: npm run test:scanner
       - run: npm run test:public-api
       - run: npm run test:pack-consumer
       - run: npm run publish:dry-run

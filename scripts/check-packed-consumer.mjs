@@ -6,11 +6,16 @@ import { execFileSync } from "node:child_process";
 
 const repositoryRoot = process.cwd();
 const tempDirectory = mkdtempSync(path.join(os.tmpdir(), "raggle-local-packed-consumer-"));
-let tarballPath;
 
 try {
-  const packed = JSON.parse(execFileSync("npm", ["pack", "--json"], { cwd: repositoryRoot, encoding: "utf8" }));
-  tarballPath = path.join(repositoryRoot, packed[0].filename);
+  const packedFilename = execFileSync(
+    "npm",
+    ["pack", "--ignore-scripts", "--pack-destination", tempDirectory],
+    { cwd: repositoryRoot, encoding: "utf8" },
+  ).trim();
+  assert.equal(path.basename(packedFilename), packedFilename, "npm pack returned an invalid filename");
+  assert.match(packedFilename, /\.tgz$/, "npm pack did not produce a tarball");
+  const tarballPath = path.join(tempDirectory, packedFilename);
   const consumerDirectory = path.join(tempDirectory, "consumer");
 
   mkdirSync(consumerDirectory, { recursive: true });
@@ -71,15 +76,32 @@ try {
         } finally {
           fs.rmSync(configDirectory, { recursive: true, force: true });
         }
-        process.stdout.write(url);
+        const scanDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "raggle-packed-scanner-"));
+        const scanRepository = path.join(scanDirectory, "owner", "repository");
+        fs.mkdirSync(path.join(scanRepository, ".git"), { recursive: true });
+        fs.writeFileSync(
+          path.join(scanRepository, ".git", "config"),
+          '[remote "origin"]\\n  url = https://github.com/raggle-ai/packed-scanner.git\\n',
+        );
+        fs.writeFileSync(path.join(scanRepository, ".git", "HEAD"), "ref: refs/heads/main\\n");
+        pkg.scanCloneDirectoryRepositories(scanDirectory, { maxDepth: 2 })
+          .then((scan) => {
+            if (scan.repositories.length !== 1 || scan.repositories[0].worktree !== scanRepository) {
+              throw new Error("packed native scanner did not discover the nested repository");
+            }
+            process.stdout.write(url);
+          })
+          .finally(() => fs.rmSync(scanDirectory, { recursive: true, force: true }));
       `,
     ],
     { cwd: consumerDirectory, encoding: "utf8" },
   ).trim();
 
-  assert.equal(output, "https://github.com/raggle-ai/local/pulls?q=is%3Apr%20is%3Aopen%20author%3Aalice%20author%3Abob");
+  assert.equal(
+    output,
+    "https://github.com/raggle-ai/local/pulls?q=is%3Apr%20is%3Aopen%20author%3Aalice%20author%3Abob",
+  );
   console.log("packed consumer checks passed");
 } finally {
   rmSync(tempDirectory, { recursive: true, force: true });
-  if (tarballPath) rmSync(tarballPath, { force: true });
 }
