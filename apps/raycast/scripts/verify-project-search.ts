@@ -5,10 +5,10 @@ import {
   parseProjectSearch,
   searchIndexedItems,
   searchProjects,
+  type RaycastProject,
 } from "@raggle-ai/raycast-adapter";
-import { type StandardProject } from "../src/lib/standard-project-metadata.ts";
 
-function project(overrides: Partial<StandardProject> & Pick<StandardProject, "name" | "worktree">): StandardProject {
+function project(overrides: Partial<RaycastProject> & Pick<RaycastProject, "name" | "worktree">): RaycastProject {
   return {
     id: overrides.worktree,
     remoteUrl: `https://github.com/raggle-ai/${overrides.name}.git`,
@@ -18,7 +18,7 @@ function project(overrides: Partial<StandardProject> & Pick<StandardProject, "na
     isSubpathRoot: false,
     relatedIds: [],
     ...overrides,
-  } as StandardProject;
+  } as RaycastProject;
 }
 
 const projects = [

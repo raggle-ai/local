@@ -1,8 +1,0 @@
-{
-  "subpaths": [
-    {
-      "path": "packages/plugins",
-      "allSubpath": false
-    }
-  ]
-}

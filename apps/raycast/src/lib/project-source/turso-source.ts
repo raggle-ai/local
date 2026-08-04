@@ -9,9 +9,9 @@ import {
   normalizeSubpaths,
   normalizeTags,
   normalizeRepositoryUrl,
+  repositoryRemoteMetadata,
   type ImportedRepositoryRow,
 } from "@raggle-ai/local";
-import { projectRemoteMetadata } from "../project-remote-metadata";
 
 type TursoProjectRow = {
   url: string;
@@ -169,7 +169,7 @@ function importedRepositoryToSqlRow(settings: StandardProjectsSettings, input: I
   const normalizedUrl = normalizeRepositoryUrl(row.url);
   const name = typeof row.name === "string" && row.name.trim() ? row.name.trim() : null;
   const description = typeof row.description === "string" && row.description.trim() ? row.description.trim() : null;
-  const remoteMetadata = projectRemoteMetadata(normalizedUrl);
+  const remoteMetadata = repositoryRemoteMetadata(normalizedUrl);
 
   return {
     id: normalizedUrl,
@@ -185,7 +185,7 @@ function importedRepositoryToSqlRow(settings: StandardProjectsSettings, input: I
     provider: remoteMetadata?.provider ?? null,
     host: remoteMetadata?.host ?? null,
     owner: remoteMetadata?.owner ?? null,
-    repo: remoteMetadata?.repo ?? null,
+    repo: remoteMetadata?.repository ?? null,
     now: new Date().toISOString(),
   };
 }

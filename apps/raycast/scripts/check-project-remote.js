@@ -19,9 +19,9 @@ require.extensions[".ts"] = (module, fileName) => {
   module._compile(output, fileName);
 };
 
-const { normalizeRepositoryUrl, repositoryLookupKey } = require("../src/lib/git-repository.ts");
-const { projectRemoteMetadata } = require("../src/lib/project-remote-metadata.ts");
-const { remoteToBrowserUrl } = require("../src/lib/project-remote.ts");
+const { normalizeRepositoryUrl, repositoryLookupKey } = require("../../../src/adapters/git-repository.ts");
+const { repositoryRemoteMetadata } = require("../../../src/core/repository-remote-metadata.ts");
+const { remoteToBrowserUrl } = require("../../../src/core/project-remote.ts");
 
 function usage() {
   const script = path.relative(process.cwd(), __filename);
@@ -73,10 +73,14 @@ function configuredUrlFromSnapshot(folder) {
 }
 
 function providerDisplay(remoteUrl) {
-  const metadata = projectRemoteMetadata(remoteUrl);
+  const metadata = repositoryRemoteMetadata(remoteUrl);
   if (!metadata) return "<unknown>";
 
-  return [metadata.provider, metadata.host, metadata.owner && metadata.repo ? `${metadata.owner}/${metadata.repo}` : undefined]
+  return [
+    metadata.provider,
+    metadata.host,
+    metadata.owner && metadata.repository ? `${metadata.owner}/${metadata.repository}` : undefined,
+  ]
     .filter(Boolean)
     .join(" ");
 }

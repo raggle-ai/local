@@ -1,10 +1,10 @@
 import { Action, ActionPanel, Detail, Icon, useNavigation } from "@raycast/api";
 import { useState } from "react";
-import { type StandardProjectSnapshotItem } from "../lib/standard-project-cache";
+import { type RaycastProject } from "@raggle-ai/raycast-adapter";
 
 type DeleteProjectConfirmationProps = {
-  item: StandardProjectSnapshotItem;
-  onDeleteProject: (project: StandardProjectSnapshotItem) => Promise<boolean>;
+  item: RaycastProject;
+  onDeleteProject: (project: RaycastProject) => Promise<boolean>;
 };
 
 function codeBlock(value: string) {

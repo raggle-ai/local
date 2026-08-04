@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { recordRecentSelection, sortNonFavouritesByRecentSelection } from "../src/lib/enhanced-list-order.ts";
+import { recordRecentSelection, sortNonFavouritesByRecentSelection } from "@raggle-ai/raycast-adapter";
 
 type Item = {
   key: string;

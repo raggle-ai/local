@@ -20,6 +20,7 @@ export type ImportedRepositoryRow = {
   tags?: unknown;
   subpaths?: unknown;
   allSubpath?: unknown;
+  collapseSubpaths?: unknown;
   allTopLevelFolders?: unknown;
   folders?: unknown;
   clonePathTemplate?: unknown;
@@ -35,6 +36,7 @@ export type ImportedRepository = {
   tags: string[];
   subpaths: ImportedRepositorySubpath[];
   allSubpath: boolean;
+  collapseSubpaths: boolean;
   allTopLevelFolders: boolean;
   folders: string[];
   clonePathTemplate?: string;
@@ -257,6 +259,7 @@ export function loadImportedRepositoriesFromRows(rows: unknown[], plugins: strin
       tags: normalizeTags(row.tags),
       subpaths: normalizeSubpaths(row.subpaths),
       allSubpath: row.allSubpath === true,
+      collapseSubpaths: row.collapseSubpaths === true,
       allTopLevelFolders: row.allTopLevelFolders === true,
       folders: normalizeFolders(row.folders),
       clonePathTemplate: normalizeClonePathTemplate(row.clonePathTemplate),

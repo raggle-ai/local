@@ -6,10 +6,8 @@
 
 - `src/core`: pure project naming, config normalization, subpath rules, keyword generation, and public types.
 - `src/adapters`: Git, GitHub CLI, opencode, filesystem-backed config, and icon discovery.
-- `src/cache`: persisted clone-directory indexes and cache hydration.
+- `src/cache`: persisted clone-directory repository indexes.
 - `src/discovery`: local project loading and folder scanning.
-
-Root-level modules such as `src/git-repository.ts` are compatibility shims. New implementation code should live in the layer directories.
 
 ## Discovery Strategy
 
@@ -24,4 +22,4 @@ npm run bench
 
 ## Native Path
 
-If the TypeScript scanner becomes the measured bottleneck, replace `src/discovery/scanner.ts` with a Rust implementation exposed through `napi-rs`. Keep the TypeScript API unchanged and make native scanning optional so Node consumers still have a portable fallback.
+`src/discovery/scanner.ts` exposes the Rust scanner through `napi-rs`. Published packages include the native bindings supported by the release workflow.

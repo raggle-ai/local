@@ -1,6 +1,8 @@
 # @raggle-ai/raycast-adapter
 
-Raycast components and conversion utilities for Raggle local projects.
+Raycast components, persistence, list behavior, and conversion utilities for Raggle local projects.
+
+The adapter owns the Raycast-specific project representation, including color conversion and the shared project snapshot. Folder and repository discovery remain in `@raggle-ai/local`.
 
 ## Project picker
 

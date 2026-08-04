@@ -1,12 +1,14 @@
 import { Action, ActionPanel, Icon } from "@raycast/api";
 import { useLocalStorage } from "@raycast/utils";
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { searchIndexedItems, type IndexedSearchCache, type IndexedSearchOptions } from "@raggle-ai/raycast-adapter";
 import {
   recordRecentSelection,
   resetRecentSelection,
+  searchIndexedItems,
   sortNonFavouritesByRecentSelection,
-} from "../lib/enhanced-list-order";
+  type IndexedSearchCache,
+  type IndexedSearchOptions,
+} from "@raggle-ai/raycast-adapter";
 
 type EnhancedListActionPanelProps = {
   onSelect: ComponentProps<typeof ActionPanel>["children"];

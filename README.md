@@ -20,6 +20,8 @@ npm install github:raggle-ai/local
 import { loadLocalProjects, scanCloneDirectoryRepositories } from "@raggle-ai/local";
 ```
 
+Use `projectWithKeywords(project)` when a consumer needs a copy of a canonical project with its searchable keywords populated.
+
 The package also exports import-file helpers, project-action config merging, and GitHub CLI helpers used by downstream consumers:
 
 ```ts
@@ -48,14 +50,25 @@ The command writes a JSON array of absolute project-folder paths. It does not
 include the selected folder itself. `--folder` is a global option, can appear
 before or after the command, and defaults to the current working directory.
 
+Inspect the configuration stored for a repository in the remote Raggle project
+database with a GitHub `owner/repository` pair or a full Git remote URL:
+
+```sh
+export TURSO_DATABASE_URL="libsql://your-database.turso.io"
+export TURSO_AUTH_TOKEN="..."
+raggle-local config bakerstreetco/skills
+```
+
+The JSON result reports normalized tags, folders, explicit subpaths, and whether
+top-level folder discovery is remotely enabled as `allSubpaths`. Set
+`TURSO_DATABASE_URL` or pass `--database-url` to select the libSQL database.
+
 ## Layout
 
 - `src/core`: pure project naming, config normalization, subpath rules, keywords, and types.
 - `src/adapters`: Git, GitHub CLI, opencode, filesystem config, and icon discovery.
-- `src/cache`: clone-directory indexes and cache hydration.
+- `src/cache`: clone-directory repository indexing.
 - `src/discovery`: local project loading and folder scanning.
-
-Root-level source files are compatibility shims for the original extracted module paths.
 
 ## Discovery
 
@@ -125,7 +138,7 @@ await loadLocalProjects(projects, {
 });
 ```
 
-Built-in `kennel.json` markers are discovered wherever subpath scanning already runs (`allSubpaths` repositories and configured subpaths). Custom markers additionally trigger root-level discovery for any cloned repository whose root has a project config file, so folders like `clients/` with a `_schema.json` are picked up without listing them in `subpaths`.
+Built-in `kennel.json` markers are discovered wherever subpath scanning already runs (`collapseSubpaths` repositories and configured subpaths). Custom markers additionally trigger root-level discovery for any cloned repository whose root has a project config file, so folders like `clients/` with a `_schema.json` are picked up without listing them in `subpaths`.
 
 Repo config is read from `raggle.json` or `index.json` (first existing file wins, in that order). `projectConfigFiles` adds custom names that are checked before the defaults:
 
@@ -140,9 +153,10 @@ Repository-local config contributes tags, folders, subpaths, and discovery setti
 
 Set `"allTopLevelFolders": true` in a repository's `raggle.json` to make every
 eligible folder directly below the repository searchable while keeping the
-result list broad and shallow. Set `"allSubpaths": true` to recursively make
-every eligible descendant folder searchable. Explicit `subpaths` can still be
-used for selective expansion, and nested folder configs apply either setting
+result list broad and shallow. `"allSubpaths": true` is shorthand for the same
+top-level search. Set `"collapseSubpaths": true` to recursively make every
+eligible descendant folder searchable. Explicit `subpaths` can still be used
+for selective expansion, and nested folder configs apply these settings
 relative to that folder.
 Malformed project config stops discovery with the file path, line, column, and
 source location instead of being ignored.
@@ -165,7 +179,7 @@ const plugins = readImportedRepositoryPlugins("/path/to/projects.json");
 ```ts
 const merged = raggleProjectConfigFromProjectActionConfigs([
   { tags: ["shared"], subpaths: ["apps/web"] },
-  { folders: ["team-a"], allSubpath: true },
+  { folders: ["team-a"], collapseSubpaths: true },
 ]);
 ```
 

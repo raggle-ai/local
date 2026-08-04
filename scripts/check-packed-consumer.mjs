@@ -56,13 +56,16 @@ try {
             tags: [],
             subpaths: [],
             allSubpath: false,
+            collapseSubpaths: false,
+            allTopLevelFolders: false,
             folders: [],
             plugins: [],
             removePathFromName: false,
           },
           { allSubpaths: true },
         );
-        if (merged.allSubpath !== true) throw new Error("allSubpaths was not included in the packed package");
+        if (merged.allTopLevelFolders !== true) throw new Error("allSubpaths did not enable top-level folders");
+        if (merged.collapseSubpaths !== false) throw new Error("allSubpaths unexpectedly enabled recursive discovery");
         const configDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "raggle-packed-config-"));
         try {
           fs.writeFileSync(

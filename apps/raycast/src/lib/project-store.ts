@@ -1,5 +1,4 @@
-import { Color } from "@raycast/api";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import {
@@ -7,8 +6,12 @@ import {
   fetchGithubOwnerIcon,
   githubOwnerFromRemoteUrl,
   projectIconExtensions,
-  shouldIncludeSubpathDirectory,
 } from "@raggle-ai/local";
+import {
+  iconColorFromRaycastTint,
+  raycastTintFromIconColor,
+  type RaycastProjectColor,
+} from "@raggle-ai/raycast-adapter";
 import { extensionPaths } from "./config";
 import { listVisibleProjects, saveProjectIcon as saveProjectIconToDb, type VisibleProjectRow } from "@raggle-ai/local";
 
@@ -44,7 +47,7 @@ export type Project = {
   latestSessionTitle?: string;
   icon?: string;
   iconColor?: string;
-  tint?: Color;
+  tint?: RaycastProjectColor;
   startupCommand?: string;
   sandboxCount: number;
   updatedAt?: number;
@@ -123,27 +126,6 @@ function readProjectIndex() {
   return readJsonFile<CachedProject[]>(paths.projectIndexPath, []);
 }
 
-function colorKey(input?: Color) {
-  switch (input) {
-    case Color.Red:
-      return "red";
-    case Color.Orange:
-      return "orange";
-    case Color.Yellow:
-      return "yellow";
-    case Color.Green:
-      return "green";
-    case Color.Blue:
-      return "blue";
-    case Color.Magenta:
-      return "magenta";
-    case Color.SecondaryText:
-      return "secondary";
-    default:
-      return undefined;
-  }
-}
-
 function writeProjectIndex(items: Project[]) {
   writeJsonFile(
     paths.projectIndexPath,
@@ -153,7 +135,7 @@ function writeProjectIndex(items: Project[]) {
       name: item.name,
       worktreeName: item.worktreeName,
       latestSessionTitle: item.latestSessionTitle,
-      iconColor: item.iconColor ?? colorKey(item.tint),
+      iconColor: item.iconColor ?? iconColorFromRaycastTint(item.tint),
       startupCommand: item.startupCommand,
       sandboxCount: item.sandboxCount,
       updatedAt: item.updatedAt,
@@ -170,19 +152,6 @@ function favoriteKeys(project: Pick<Project, "id" | "worktree" | "relatedIds">) 
 
 function isProjectFavorite(favorites: Set<string>, project: Pick<Project, "id" | "worktree" | "relatedIds">) {
   return favoriteKeys(project).some((key) => favorites.has(key));
-}
-
-function tint(input: string | null | undefined) {
-  if (!input) return undefined;
-  const key = input.toLowerCase();
-  if (key.includes("red")) return Color.Red;
-  if (key.includes("orange")) return Color.Orange;
-  if (key.includes("yellow")) return Color.Yellow;
-  if (key.includes("green")) return Color.Green;
-  if (key.includes("blue")) return Color.Blue;
-  if (key.includes("magenta") || key.includes("pink") || key.includes("purple")) return Color.Magenta;
-  if (key.includes("secondary") || key.includes("gray") || key.includes("grey")) return Color.SecondaryText;
-  return undefined;
 }
 
 function sortProjects(items: Project[]) {
@@ -319,7 +288,7 @@ function toProject(row: VisibleProjectRow, favorites: Set<string>): Project {
     latestSessionTitle: row.latest_session_title || undefined,
     icon: cachedIconPath(row.id),
     iconColor: row.icon_color || undefined,
-    tint: tint(row.icon_color),
+    tint: raycastTintFromIconColor(row.icon_color),
     startupCommand: row.startup_command || undefined,
     sandboxCount: row.sandbox_count ?? 0,
     updatedAt: row.time_updated ?? undefined,
@@ -344,7 +313,7 @@ function cachedProjectToProject(record: CachedProject, favorites: Set<string>): 
     latestSessionTitle: record.latestSessionTitle,
     icon: cachedIconPath(record.id),
     iconColor: record.iconColor,
-    tint: tint(record.iconColor),
+    tint: raycastTintFromIconColor(record.iconColor),
     startupCommand: record.startupCommand,
     sandboxCount: record.sandboxCount,
     updatedAt: record.updatedAt,
@@ -359,42 +328,8 @@ function cachedProjectToProject(record: CachedProject, favorites: Set<string>): 
   };
 }
 
-function localFolderEntryToProject(worktree: string, favorites: Set<string>, cached?: CachedProject): Project {
-  if (cached) return cachedProjectToProject(cached, favorites);
-
-  const relatedIds = [worktree];
-  return {
-    id: worktree,
-    worktree,
-    name: path.basename(worktree),
-    sandboxCount: 0,
-    hasIcon: false,
-    isSessionOnly: false,
-    isFavorite: isProjectFavorite(favorites, { id: worktree, worktree, relatedIds }),
-    relatedIds,
-  };
-}
-
 export function readCachedProjects() {
   return readCachedProjectLists().items;
-}
-
-export function readLocalFolderProjects(folderPath: string) {
-  const favorites = getFavorites();
-  const cachedProjectsByWorktree = new Map(readProjectIndex().map((item) => [item.worktree, item]));
-  const items: Project[] = [];
-
-  try {
-    for (const entry of readdirSync(folderPath, { withFileTypes: true })) {
-      if (!entry.isDirectory() || !shouldIncludeSubpathDirectory(entry.name)) continue;
-      const worktree = path.join(folderPath, entry.name);
-      items.push(localFolderEntryToProject(worktree, favorites, cachedProjectsByWorktree.get(worktree)));
-    }
-  } catch {
-    return [];
-  }
-
-  return sortProjects(items);
 }
 
 function readAllCachedProjects() {
@@ -558,7 +493,7 @@ export function updateProjectInCache(
             ...item,
             name: updates.name?.trim() || undefined,
             iconColor: updates.iconColor?.trim() || undefined,
-            tint: tint(updates.iconColor),
+            tint: raycastTintFromIconColor(updates.iconColor),
             startupCommand: updates.startupCommand?.trim() || undefined,
           }
         : item,

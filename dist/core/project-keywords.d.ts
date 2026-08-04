@@ -9,7 +9,7 @@ export type ProjectKeywordInput = {
     latestSessionTitle?: string;
 };
 export declare function projectKeywords(item: ProjectKeywordInput): string[];
-export declare function standardProjectWithKeywords<T extends ProjectKeywordInput>(item: T): T & {
+export declare function projectWithKeywords<T extends ProjectKeywordInput>(item: T): T & {
     keywords: string[];
 };
 export declare function projectTitle(item: {

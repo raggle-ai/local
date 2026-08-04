@@ -8,8 +8,10 @@ export type RaggleProjectConfig = {
     tags?: string[];
     folders?: string[];
     subpaths?: ImportedRepositorySubpath[];
-    /** Recursively includes every eligible descendant folder. */
+    /** Shorthand for allTopLevelFolders. */
     allSubpaths?: boolean;
+    /** Recursively includes every eligible descendant folder. */
+    collapseSubpaths?: boolean;
     /** Includes every eligible folder directly below the configured directory. */
     allTopLevelFolders?: boolean;
     removePathFromName?: boolean;

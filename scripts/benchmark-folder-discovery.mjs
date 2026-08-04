@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { scanCloneDirectoryRepositories } from "../dist/scanner.js";
+import { scanCloneDirectoryRepositories } from "../dist/discovery/scanner.js";
 
 const repositoryCount = Number.parseInt(process.env.RAGGLE_BENCH_REPOS ?? "1000", 10);
 const directoryCount = Number.parseInt(process.env.RAGGLE_BENCH_DIRECTORIES ?? "10000", 10);

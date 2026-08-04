@@ -102,7 +102,7 @@ export function projectKeywords(item: ProjectKeywordInput) {
   return [...values].filter(Boolean);
 }
 
-export function standardProjectWithKeywords<T extends ProjectKeywordInput>(item: T): T & { keywords: string[] } {
+export function projectWithKeywords<T extends ProjectKeywordInput>(item: T): T & { keywords: string[] } {
   return { ...item, keywords: projectKeywords(item) };
 }
 

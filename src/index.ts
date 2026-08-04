@@ -1,10 +1,11 @@
-export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./load-local-projects";
+export { loadLocalProjects } from "./discovery/load-local-projects";
+export { projectKeywords, projectWithKeywords, type ProjectKeywordInput } from "./core/project-keywords";
 export {
   discoverLocalProjects,
   discoverLocalProjectsUnderFolder,
   type DiscoverLocalProjectsOptions,
   type DiscoverLocalProjectsUnderFolderOptions,
-} from "./discover-local-projects";
+} from "./discovery/discover-local-projects";
 export type {
   LocalProject,
   LocalProjectDelta,
@@ -14,9 +15,10 @@ export type {
   NormalizedRemoteProject,
   ProjectActionConfig,
   RemoteProject,
-} from "./types";
+} from "./core/types";
 export { applyLocalProjectDelta, createLocalProjectUpdate } from "./core/project-load-update";
-export type { ImportedRepositorySubpath } from "./project-subpaths";
+export { mergeLocalProjectMetadata, type LocalProjectMetadata } from "./core/project-metadata";
+export type { ImportedRepositorySubpath } from "./core/project-subpaths";
 export {
   loadImportedRepositories,
   loadImportedRepositoriesFromRows,
@@ -28,7 +30,7 @@ export {
   loadRepositorySubpaths,
   type ImportedRepository,
   type ImportedRepositoryRow,
-} from "./import";
+} from "./adapters/import";
 export {
   normalizeRepositoryUrl,
   repositoryName,
@@ -37,8 +39,19 @@ export {
   githubRepositoryPath,
   gitRemoteUrl,
   gitCurrentBranch,
-} from "./git-repository";
-export { remoteToBrowserUrl, projectRemoteUrl, projectRemoteBrowserUrl } from "./project-remote";
+} from "./adapters/git-repository";
+export { remoteToBrowserUrl, projectRemoteUrl, projectRemoteBrowserUrl } from "./core/project-remote";
+export {
+  repositoryRemoteMetadata,
+  repositoryRemoteProvider,
+  type RepositoryRemoteMetadata,
+} from "./core/repository-remote-metadata";
+export { applyProjectActionPlugins, resolveProjectActionPluginDirectories } from "./adapters/project-action-plugins";
+export {
+  normalizeRepositoryReference,
+  readRemoteRepositoryConfig,
+  type RemoteRepositoryConfig,
+} from "./adapters/remote-repository-config";
 export {
   normalizeSubpaths,
   normalizeSubpathPaths,
@@ -48,8 +61,8 @@ export {
   readSubpathChildDirectories,
   shouldIncludeSubpathDirectory,
   type ProjectSubpathSettingsValues,
-} from "./project-subpaths";
-export { normalizeTags, normalizeFolders } from "./project-config-fields";
+} from "./core/project-subpaths";
+export { normalizeTags, normalizeFolders } from "./core/project-config-fields";
 export {
   DEFAULT_GLOBAL_IGNORED_SUBPATHS,
   DEFAULT_PROJECT_CONFIG_FILES,
@@ -65,7 +78,7 @@ export {
   raggleProjectConfigFromProjectActionConfigs,
   type RaggleProjectConfig,
   RaggleProjectConfigParseError,
-} from "./raggle-project-config";
+} from "./adapters/raggle-project-config";
 export {
   clonePathTemplateFromFormValue,
   deriveLocalProjectPath,
@@ -76,14 +89,14 @@ export {
   repositoryCloneParentDirectory,
   repositoryRootPath,
   type AddProjectValues,
-} from "./add-project";
+} from "./adapters/add-project";
 export {
   folderDisplayName,
   repoPrefixedProjectName,
   subpathContextName,
   subpathParentDisplayName,
   subpathProjectName,
-} from "./folder-mapping";
+} from "./core/folder-mapping";
 export {
   githubAuthenticatedAccounts,
   githubCliPath,
@@ -107,33 +120,25 @@ export {
   type GitHubSearchItem,
   type GitHubSearchItemKind,
   type GitHubUserSearchItem,
-} from "./github";
+} from "./adapters/github";
 export {
   discoverProjectIcon,
   fetchGithubOwnerIcon,
   githubOwnerFromRemoteUrl,
   projectIconExtensions,
-} from "./project-icons";
+} from "./adapters/project-icons";
 export {
   listVisibleProjects,
   latestSessionForWorktree,
   saveProjectIcon,
   type LatestSessionRow,
   type VisibleProjectRow,
-} from "./opencode-local";
-export {
-  initialFavoriteProjectRenderLimit,
-  initialNonFavoriteProjectRenderLimit,
-  initialSearchProjectRenderLimit,
-  maxProgressiveIconHydrationProjects,
-  nextProjectRenderLimit,
-  projectRenderLimitIncrement,
-} from "./project-list-limits";
-export { projectTitle, projectSubtitle, projectAccessoryPath } from "./project-keywords";
+} from "./adapters/opencode-local";
+export { projectTitle, projectSubtitle, projectAccessoryPath } from "./core/project-keywords";
 export {
   discoverRepository,
   scanCloneDirectoryRepositories,
   type DiscoveredRepository,
   type ScanCloneDirectoryOptions,
   type ScanCloneDirectoryResult,
-} from "./scanner";
+} from "./discovery/scanner";

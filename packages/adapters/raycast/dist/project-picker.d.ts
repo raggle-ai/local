@@ -6,4 +6,4 @@ export type ProjectPickerProps = RaggleProjectSnapshotOptions & {
     navigationTitle?: string;
     searchBarPlaceholder?: string;
 };
-export declare function ProjectPicker({ onSelect, actionTitle, navigationTitle, searchBarPlaceholder, ...snapshotOptions }: ProjectPickerProps): import("react/jsx-runtime").JSX.Element;
+export declare function ProjectPicker({ onSelect, actionTitle, navigationTitle, searchBarPlaceholder, ...snapshotOptions }: ProjectPickerProps): import("react").JSX.Element;

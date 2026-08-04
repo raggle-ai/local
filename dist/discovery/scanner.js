@@ -9,7 +9,11 @@ const node_module_1 = require("node:module");
 const node_path_1 = __importDefault(require("node:path"));
 const git_repository_1 = require("../adapters/git-repository");
 const nativeRequire = (0, node_module_1.createRequire)(__filename);
-const nativeScanner = nativeRequire("../native");
+let nativeScanner;
+function loadNativeScanner() {
+    nativeScanner ??= nativeRequire(process.env.NAPI_RS_NATIVE_LIBRARY_PATH ?? "../native");
+    return nativeScanner;
+}
 function boundedInteger(value, fallback, minimum, maximum) {
     if (value === undefined || !Number.isFinite(value))
         return fallback;
@@ -31,7 +35,7 @@ function normalizeRepository(repository) {
 }
 /** Identifies a Git repository rooted at exactly the supplied directory. */
 function discoverRepository(directory) {
-    const repository = nativeScanner.discoverRepository(node_path_1.default.resolve(directory));
+    const repository = loadNativeScanner().discoverRepository(node_path_1.default.resolve(directory));
     return repository ? normalizeRepository(repository) : undefined;
 }
 /**
@@ -52,7 +56,7 @@ async function scanCloneDirectoryRepositories(cloneDirectory, options) {
         };
     }
     let progressCount = 0;
-    const result = await nativeScanner.scanCloneDirectoryRepositories(node_path_1.default.resolve(cloneDirectory), limits, options?.signal, options?.onProgress
+    const result = await loadNativeScanner().scanCloneDirectoryRepositories(node_path_1.default.resolve(cloneDirectory), limits, options?.signal, options?.onProgress
         ? ([repository]) => {
             progressCount += 1;
             options.onProgress?.(normalizeRepository(repository), progressCount);

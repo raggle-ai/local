@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectPicker = ProjectPicker;
 const jsx_runtime_1 = require("react/jsx-runtime");
 const api_1 = require("@raycast/api");
-const local_1 = require("@raggle-ai/local");
 const react_1 = require("react");
+const project_list_limits_1 = require("./project-list-limits");
 const project_search_1 = require("./project-search");
 const project_snapshot_1 = require("./project-snapshot");
 const responsiveSearchProjectRenderLimit = 100;
@@ -39,8 +39,8 @@ function ProjectPicker({ onSelect, actionTitle = "Select Project", navigationTit
         }
     }, [snapshotOptions.currentSupportPath, snapshotOptions.raggleExtensionName, snapshotOptions.snapshotPath]);
     const [searchText, setSearchText] = (0, react_1.useState)("");
-    const [favoriteRenderLimit, setFavoriteRenderLimit] = (0, react_1.useState)(local_1.initialFavoriteProjectRenderLimit);
-    const [nonFavoriteRenderLimit, setNonFavoriteRenderLimit] = (0, react_1.useState)(local_1.initialNonFavoriteProjectRenderLimit);
+    const [favoriteRenderLimit, setFavoriteRenderLimit] = (0, react_1.useState)(project_list_limits_1.initialFavoriteProjectRenderLimit);
+    const [nonFavoriteRenderLimit, setNonFavoriteRenderLimit] = (0, react_1.useState)(project_list_limits_1.initialNonFavoriteProjectRenderLimit);
     const favoriteSearchCacheRef = (0, react_1.useRef)(undefined);
     const nonFavoriteSearchCacheRef = (0, react_1.useRef)(undefined);
     const parsedSearch = (0, react_1.useMemo)(() => (0, project_search_1.parseProjectSearch)(searchText), [searchText]);
@@ -72,10 +72,10 @@ function ProjectPicker({ onSelect, actionTitle = "Select Project", navigationTit
     }, [favoriteSearchResult.cache, nonFavoriteSearchResult.cache]);
     const updateSearchText = (0, react_1.useCallback)((nextSearchText) => {
         setSearchText(nextSearchText);
-        setFavoriteRenderLimit(local_1.initialFavoriteProjectRenderLimit);
+        setFavoriteRenderLimit(project_list_limits_1.initialFavoriteProjectRenderLimit);
         setNonFavoriteRenderLimit(nextSearchText.trim()
-            ? Math.min(local_1.initialSearchProjectRenderLimit, responsiveSearchProjectRenderLimit)
-            : local_1.initialNonFavoriteProjectRenderLimit);
+            ? Math.min(project_list_limits_1.initialSearchProjectRenderLimit, responsiveSearchProjectRenderLimit)
+            : project_list_limits_1.initialNonFavoriteProjectRenderLimit);
     }, []);
     const matchingProjects = (0, react_1.useMemo)(() => {
         const matches = new Set([
@@ -101,7 +101,7 @@ function ProjectPicker({ onSelect, actionTitle = "Select Project", navigationTit
                     : []),
             ], icon: project.icon ? { source: project.icon } : api_1.Icon.Folder, actions: (0, jsx_runtime_1.jsx)(api_1.ActionPanel, { children: (0, jsx_runtime_1.jsx)(api_1.Action, { title: actionTitle, icon: api_1.Icon.Checkmark, onAction: () => onSelect(project) }) }) }, projectItemId(project)));
     }
-    return ((0, jsx_runtime_1.jsx)(api_1.List, { navigationTitle: navigationTitle, searchBarPlaceholder: searchBarPlaceholder, filtering: false, searchText: searchText, onSearchTextChange: updateSearchText, children: state.error ? ((0, jsx_runtime_1.jsx)(api_1.List.EmptyView, { title: "No Raggle Projects Found", description: "Open Raggle once to refresh its project snapshot.", icon: api_1.Icon.Warning })) : ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [visibleFavorites.length ? ((0, jsx_runtime_1.jsxs)(api_1.List.Section, { title: "Favorites", subtitle: `${visibleFavorites.length} of ${filteredFavoriteCount}`, children: [visibleFavorites.map(renderProject), visibleFavorites.length < filteredFavoriteCount ? ((0, jsx_runtime_1.jsx)(api_1.List.Item, { title: "Show More Results", subtitle: `Showing ${visibleFavorites.length} of ${filteredFavoriteCount}`, icon: api_1.Icon.Plus, actions: (0, jsx_runtime_1.jsx)(api_1.ActionPanel, { children: (0, jsx_runtime_1.jsx)(api_1.Action, { title: "Show More Results", icon: api_1.Icon.Plus, onAction: () => setFavoriteRenderLimit((limit) => (0, local_1.nextProjectRenderLimit)(limit, filteredFavoriteCount)) }) }) })) : null] })) : null, visibleNonFavorites.length ? ((0, jsx_runtime_1.jsxs)(api_1.List.Section, { title: visibleFavorites.length ? "Projects" : `Projects (${filteredNonFavoriteCount.toLocaleString()})`, subtitle: visibleNonFavorites.length < filteredNonFavoriteCount
+    return ((0, jsx_runtime_1.jsx)(api_1.List, { navigationTitle: navigationTitle, searchBarPlaceholder: searchBarPlaceholder, filtering: false, searchText: searchText, onSearchTextChange: updateSearchText, children: state.error ? ((0, jsx_runtime_1.jsx)(api_1.List.EmptyView, { title: "No Raggle Projects Found", description: "Open Raggle once to refresh its project snapshot.", icon: api_1.Icon.Warning })) : ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [visibleFavorites.length ? ((0, jsx_runtime_1.jsxs)(api_1.List.Section, { title: "Favorites", subtitle: `${visibleFavorites.length} of ${filteredFavoriteCount}`, children: [visibleFavorites.map(renderProject), visibleFavorites.length < filteredFavoriteCount ? ((0, jsx_runtime_1.jsx)(api_1.List.Item, { title: "Show More Results", subtitle: `Showing ${visibleFavorites.length} of ${filteredFavoriteCount}`, icon: api_1.Icon.Plus, actions: (0, jsx_runtime_1.jsx)(api_1.ActionPanel, { children: (0, jsx_runtime_1.jsx)(api_1.Action, { title: "Show More Results", icon: api_1.Icon.Plus, onAction: () => setFavoriteRenderLimit((limit) => (0, project_list_limits_1.nextProjectRenderLimit)(limit, filteredFavoriteCount)) }) }) })) : null] })) : null, visibleNonFavorites.length ? ((0, jsx_runtime_1.jsxs)(api_1.List.Section, { title: visibleFavorites.length ? "Projects" : `Projects (${filteredNonFavoriteCount.toLocaleString()})`, subtitle: visibleNonFavorites.length < filteredNonFavoriteCount
                         ? `${visibleNonFavorites.length} of ${filteredNonFavoriteCount}`
-                        : undefined, children: [visibleNonFavorites.map(renderProject), visibleNonFavorites.length < filteredNonFavoriteCount ? ((0, jsx_runtime_1.jsx)(api_1.List.Item, { title: "Show More Results", subtitle: `Showing ${visibleNonFavorites.length} of ${filteredNonFavoriteCount}`, icon: api_1.Icon.Plus, actions: (0, jsx_runtime_1.jsx)(api_1.ActionPanel, { children: (0, jsx_runtime_1.jsx)(api_1.Action, { title: "Show More Results", icon: api_1.Icon.Plus, onAction: () => setNonFavoriteRenderLimit((limit) => (0, local_1.nextProjectRenderLimit)(limit, filteredNonFavoriteCount)) }) }) })) : null] })) : null, !visibleFavorites.length && !visibleNonFavorites.length ? ((0, jsx_runtime_1.jsx)(api_1.List.EmptyView, { title: "No Projects", icon: api_1.Icon.MagnifyingGlass })) : null] })) }));
+                        : undefined, children: [visibleNonFavorites.map(renderProject), visibleNonFavorites.length < filteredNonFavoriteCount ? ((0, jsx_runtime_1.jsx)(api_1.List.Item, { title: "Show More Results", subtitle: `Showing ${visibleNonFavorites.length} of ${filteredNonFavoriteCount}`, icon: api_1.Icon.Plus, actions: (0, jsx_runtime_1.jsx)(api_1.ActionPanel, { children: (0, jsx_runtime_1.jsx)(api_1.Action, { title: "Show More Results", icon: api_1.Icon.Plus, onAction: () => setNonFavoriteRenderLimit((limit) => (0, project_list_limits_1.nextProjectRenderLimit)(limit, filteredNonFavoriteCount)) }) }) })) : null] })) : null, !visibleFavorites.length && !visibleNonFavorites.length ? ((0, jsx_runtime_1.jsx)(api_1.List.EmptyView, { title: "No Projects", icon: api_1.Icon.MagnifyingGlass })) : null] })) }));
 }

@@ -6,6 +6,12 @@ This project loosely follows Keep a Changelog and uses semantic versioning as a 
 
 ## [Unreleased]
 
+- Remove personal and machine-specific defaults from package metadata, database configuration, utilities, and fixtures.
+- Replace the last package-level `standardProjectWithKeywords` name with the consumer-neutral `projectWithKeywords` API.
+- Fix local development failing to load the native folder scanner from Raycast's bundled extension output.
+- Fix local development bundling libsql's native Node driver while retaining lazy `file:` database support for the CLI.
+- Move reusable folder-discovery metadata merging and repository parsing into `@raggle-ai/local`, and move Raycast snapshots and list ordering into `@raggle-ai/raycast-adapter`.
+- Consume the local workspace packages directly so Raycast development and CI cannot silently use stale published implementations.
 - `projects`: honor nested folder `allSubpaths` configs so their direct child folders are searchable.
 - `projects`: repository root rows that have subpath children now show a leading star marker so the main repo is easier to distinguish in search results.
 - Replace the vendored local-discovery package with the published `@raggle-ai/local` dependency.

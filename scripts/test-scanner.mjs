@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { discoverRepository, scanCloneDirectoryRepositories } from "../dist/scanner.js";
+import { discoverRepository, scanCloneDirectoryRepositories } from "../dist/discovery/scanner.js";
 
 const root = mkdtempSync(path.join(os.tmpdir(), "raggle-local-scanner-"));
 

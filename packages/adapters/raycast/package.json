@@ -1,9 +1,9 @@
 {
   "name": "@raggle-ai/raycast-adapter",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Raycast adapter utilities for Raggle local projects",
   "license": "MIT",
-  "author": "Andrew Maguire",
+  "author": "Raggle AI",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -26,7 +26,7 @@
     "test": "npm run build && node --test test/*.test.cjs"
   },
   "peerDependencies": {
-    "@raggle-ai/local": ">=0.3.0",
+    "@raggle-ai/local": ">=0.4.0",
     "@raycast/api": ">=1.94.0",
     "react": ">=18.0.0"
   },

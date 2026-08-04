@@ -1,5 +1,4 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
+import { applyProjectActionPlugins as applyRepositoryActionPlugins } from "@raggle-ai/local";
 import { type ImportedRepository, readImportedRepositoryRows } from "@raggle-ai/local";
 import { type StandardProjectsSettings } from "./config";
 import { readCachedTursoProjectRows, readTursoProjectRows } from "./project-source/turso-source";
@@ -50,22 +49,9 @@ export function readCachedProjectSourceRows(preferences: StandardProjectsSetting
   return undefined;
 }
 
-function projectActionPluginsFromSettings(preferences: Pick<StandardProjectsSettings, "projectActionsDirectory">) {
-  return (preferences.projectActionsDirectory ?? []).map((projectActionsDirectory) => {
-    const pluginsDirectory = path.join(projectActionsDirectory, "plugins");
-    return existsSync(pluginsDirectory) ? pluginsDirectory : projectActionsDirectory;
-  });
-}
-
 export function applyProjectActionPlugins(
   repositories: ImportedRepository[],
   preferences: Pick<StandardProjectsSettings, "projectActionsDirectory">,
 ) {
-  const settingsPlugins = projectActionPluginsFromSettings(preferences);
-  if (!settingsPlugins.length) return repositories;
-
-  return repositories.map((repository) => ({
-    ...repository,
-    plugins: [...new Set([...settingsPlugins, ...repository.plugins])],
-  }));
+  return applyRepositoryActionPlugins(repositories, preferences.projectActionsDirectory ?? []);
 }

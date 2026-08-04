@@ -34,7 +34,7 @@ import {
   loadProjectActionPluginsWithDiagnostics,
 } from "../lib/project-action-plugin-loader";
 import { type ProjectActionContext, type ProjectActionItem } from "../lib/project-actions";
-import { type StandardProjectSnapshotItem } from "../lib/standard-project-cache";
+import { type RaycastProject } from "@raggle-ai/raycast-adapter";
 import { DeleteProjectConfirmation } from "./delete-project-confirmation";
 import { EnhancedListActionPanel, useEnhancedListFavourites } from "./enhanced-list";
 
@@ -52,7 +52,7 @@ type ProjectGitHubState = {
 };
 
 type ProjectActionsListProps = {
-  item: StandardProjectSnapshotItem;
+  item: RaycastProject;
   projectListFile: string;
   openInTarget: OpenInTarget;
   defaultTerminalTarget?: OpenInTarget;
@@ -63,10 +63,10 @@ type ProjectActionsListProps = {
   multiOpenInTargets?: OpenInTarget[];
   multiOpenInShortcuts?: OpenInShortcutSetting[];
   gitPullRequestAuthors?: string[];
-  onOpenProject: (project: StandardProjectSnapshotItem) => Promise<void>;
-  onOpenProjectIn: (project: StandardProjectSnapshotItem, target: OpenInTarget) => Promise<void>;
-  onOpenProjectNewSession: (project: StandardProjectSnapshotItem, target: OpenInTarget) => Promise<void>;
-  onDeleteProject?: (project: StandardProjectSnapshotItem) => Promise<boolean>;
+  onOpenProject: (project: RaycastProject) => Promise<void>;
+  onOpenProjectIn: (project: RaycastProject, target: OpenInTarget) => Promise<void>;
+  onOpenProjectNewSession: (project: RaycastProject, target: OpenInTarget) => Promise<void>;
+  onDeleteProject?: (project: RaycastProject) => Promise<boolean>;
 };
 
 type ProjectActionItemsListProps = {

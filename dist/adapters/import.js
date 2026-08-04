@@ -216,6 +216,7 @@ function loadImportedRepositoriesFromRows(rows, plugins = []) {
             tags: (0, project_config_fields_1.normalizeTags)(row.tags),
             subpaths: (0, project_subpaths_1.normalizeSubpaths)(row.subpaths),
             allSubpath: row.allSubpath === true,
+            collapseSubpaths: row.collapseSubpaths === true,
             allTopLevelFolders: row.allTopLevelFolders === true,
             folders: (0, project_config_fields_1.normalizeFolders)(row.folders),
             clonePathTemplate: normalizeClonePathTemplate(row.clonePathTemplate),

@@ -6,7 +6,7 @@ const { subpathProjectName, subpathContextName, subpathParentDisplayName } = req
 
 const parent = {
   name: "_main",
-  repositoryRoot: "/Users/andrew/Documents/GitHub/_main",
+  repositoryRoot: "/workspace/_main",
 };
 
 assert.equal(subpathContextName(parent, "raggle/clients"), "_main/raggle/clients");

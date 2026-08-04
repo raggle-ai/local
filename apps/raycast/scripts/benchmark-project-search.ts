@@ -8,8 +8,8 @@ import {
   searchIndexedItems,
   type IndexedSearchCache,
   type ProjectSearchIndexEntry,
+  type RaycastProject,
 } from "@raggle-ai/raycast-adapter";
-import { type StandardProject } from "../src/lib/standard-project-metadata.ts";
 
 const datasetSizes = [100, 1_000, 10_000] as const;
 const sampleCount = 25;
@@ -17,7 +17,7 @@ const resultLimit = 50;
 
 type ParsedProjectSearch = ReturnType<typeof parseProjectSearch>;
 
-function syntheticProjects(size: number): StandardProject[] {
+function syntheticProjects(size: number): RaycastProject[] {
   return Array.from({ length: size }, (_, index) => {
     const projectNumber = String(index).padStart(5, "0");
     const isSubpath = index % 5 === 4;
@@ -37,7 +37,7 @@ function syntheticProjects(size: number): StandardProject[] {
       relatedIds: [],
       keywords: ["project", projectNumber, index % 2 === 0 ? "frontend" : "backend"],
       latestSessionTitle: index % 10 === 0 ? `Review project ${projectNumber}` : undefined,
-    } as StandardProject;
+    } as RaycastProject;
   });
 }
 
