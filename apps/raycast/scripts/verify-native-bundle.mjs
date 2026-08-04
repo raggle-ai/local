@@ -31,9 +31,7 @@ try {
     stdin: {
       contents: `
         process.env.NAPI_RS_NATIVE_LIBRARY_PATH = ${JSON.stringify(nativeLibraryPath)};
-        const { scanCloneDirectoryRepositories } = require(${JSON.stringify(
-          path.join(repositoryRoot, "dist", "discovery", "scanner.js"),
-        )});
+        const { scanCloneDirectoryRepositories } = require(${JSON.stringify(path.join(repositoryRoot, "dist", "index.js"))});
         scanCloneDirectoryRepositories(${JSON.stringify(tempDirectory)}, { maxDepth: 2 })
           .then((result) => process.stdout.write(JSON.stringify(result.repositories)));
       `,

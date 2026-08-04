@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_RAGGLE_DATABASE_URL = void 0;
 exports.normalizeRepositoryReference = normalizeRepositoryReference;
 exports.readRemoteRepositoryConfig = readRemoteRepositoryConfig;
-const client_1 = require("@libsql/client");
+const web_1 = require("@libsql/client/web");
 const project_config_fields_1 = require("../core/project-config-fields");
 const project_subpaths_1 = require("../core/project-subpaths");
 const import_1 = require("./import");
@@ -27,7 +27,7 @@ function normalizeRepositoryReference(input) {
 }
 async function readRemoteRepositoryConfig(options) {
     const repository = normalizeRepositoryReference(options.repository);
-    const client = (0, client_1.createClient)({
+    const client = (0, web_1.createClient)({
         url: options.databaseUrl?.trim() || exports.DEFAULT_RAGGLE_DATABASE_URL,
         authToken: options.authToken?.trim() || undefined,
     });

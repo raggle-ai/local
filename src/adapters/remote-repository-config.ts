@@ -1,4 +1,4 @@
-import { createClient } from "@libsql/client";
+import { createClient } from "@libsql/client/web";
 import { normalizeFolders, normalizeTags } from "../core/project-config-fields";
 import { normalizeSubpaths } from "../core/project-subpaths";
 import { normalizeClonePathTemplate } from "./import";
