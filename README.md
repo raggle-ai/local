@@ -20,6 +20,8 @@ npm install github:raggle-ai/local
 import { loadLocalProjects, scanCloneDirectoryRepositories } from "@raggle-ai/local";
 ```
 
+Use `projectWithKeywords(project)` when a consumer needs a copy of a canonical project with its searchable keywords populated.
+
 The package also exports import-file helpers, project-action config merging, and GitHub CLI helpers used by downstream consumers:
 
 ```ts

@@ -16,13 +16,23 @@ import {
   repositoryRemoteMetadata,
   readImportedRepositoryPlugins,
   raggleProjectConfigFromProjectActionConfigs,
+  projectWithKeywords,
 } from "../dist/index.js";
+import raggleLocal from "../dist/index.js";
 
 const repository = {
   owner: "raggle-ai",
   repo: "local",
   browserUrl: "https://github.com/raggle-ai/local",
 };
+
+assert.deepEqual(projectWithKeywords({ worktree: "/tmp/example", name: "Example" }).keywords, [
+  "/tmp/example",
+  "tmp",
+  "example",
+  "Example",
+]);
+assert.equal(raggleLocal.standardProjectWithKeywords, undefined);
 
 assert.deepEqual(repositoryRemoteMetadata("git@github.com:raggle-ai/local.git"), {
   provider: "github",

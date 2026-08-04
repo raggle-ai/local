@@ -1,4 +1,5 @@
-export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./discovery/load-local-projects";
+export { loadLocalProjects } from "./discovery/load-local-projects";
+export { projectKeywords, projectWithKeywords, type ProjectKeywordInput } from "./core/project-keywords";
 export { discoverLocalProjects, discoverLocalProjectsUnderFolder, type DiscoverLocalProjectsOptions, type DiscoverLocalProjectsUnderFolderOptions, } from "./discovery/discover-local-projects";
 export type { LocalProject, LocalProjectDelta, LocalProjectLoadPhase, LocalProjectUpdate, LoadLocalProjectsOptions, NormalizedRemoteProject, ProjectActionConfig, RemoteProject, } from "./core/types";
 export { applyLocalProjectDelta, createLocalProjectUpdate } from "./core/project-load-update";

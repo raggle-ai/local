@@ -1,10 +1,22 @@
-import { createClient } from "@libsql/client/web";
+import { createRequire } from "node:module";
+import { createClient as createWebClient } from "@libsql/client/web";
 import { normalizeFolders, normalizeTags } from "../core/project-config-fields";
 import { normalizeSubpaths } from "../core/project-subpaths";
 import { normalizeClonePathTemplate } from "./import";
 import { normalizeRepositoryUrl } from "./git-repository";
 
 export const DEFAULT_RAGGLE_DATABASE_URL = "libsql://raggle-raycast-projects-anduimagui.aws-eu-west-1.turso.io";
+
+const requireFromPackage = createRequire(__filename);
+
+function createDatabaseClient(options: { url: string; authToken?: string }) {
+  if (!options.url.startsWith("file:")) return createWebClient(options);
+
+  const { createClient } = requireFromPackage("@libsql/client") as {
+    createClient: typeof createWebClient;
+  };
+  return createClient(options);
+}
 
 export type RemoteRepositoryConfig = {
   repository: string;
@@ -53,7 +65,7 @@ export async function readRemoteRepositoryConfig(options: {
   authToken?: string;
 }): Promise<RemoteRepositoryConfig | undefined> {
   const repository = normalizeRepositoryReference(options.repository);
-  const client = createClient({
+  const client = createDatabaseClient({
     url: options.databaseUrl?.trim() || DEFAULT_RAGGLE_DATABASE_URL,
     authToken: options.authToken?.trim() || undefined,
   });

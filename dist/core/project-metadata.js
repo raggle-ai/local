@@ -38,14 +38,14 @@ function mergeLocalProjectMetadata(projects, metadataItems) {
         if (!metadata) {
             if (!inheritedIcon?.icon)
                 return project;
-            return (0, project_keywords_1.standardProjectWithKeywords)({
+            return (0, project_keywords_1.projectWithKeywords)({
                 ...project,
                 icon: project.icon ?? inheritedIcon.icon,
                 iconColor: project.iconColor ?? inheritedIcon.iconColor,
                 hasIcon: project.hasIcon || Boolean(inheritedIcon.icon),
             });
         }
-        return (0, project_keywords_1.standardProjectWithKeywords)({
+        return (0, project_keywords_1.projectWithKeywords)({
             ...project,
             name: resolvedProjectName(project, metadata),
             worktreeName: metadata.worktreeName ?? project.worktreeName,

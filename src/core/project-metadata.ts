@@ -1,5 +1,5 @@
 import path from "node:path";
-import { standardProjectWithKeywords } from "./project-keywords";
+import { projectWithKeywords } from "./project-keywords";
 import type { LocalProject } from "./types";
 
 export type LocalProjectMetadata = Pick<LocalProject, "worktree"> &
@@ -64,7 +64,7 @@ export function mergeLocalProjectMetadata(
     if (!metadata) {
       if (!inheritedIcon?.icon) return project;
 
-      return standardProjectWithKeywords({
+      return projectWithKeywords({
         ...project,
         icon: project.icon ?? inheritedIcon.icon,
         iconColor: project.iconColor ?? inheritedIcon.iconColor,
@@ -72,7 +72,7 @@ export function mergeLocalProjectMetadata(
       });
     }
 
-    return standardProjectWithKeywords({
+    return projectWithKeywords({
       ...project,
       name: resolvedProjectName(project, metadata),
       worktreeName: metadata.worktreeName ?? project.worktreeName,

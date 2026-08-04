@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.projectKeywords = projectKeywords;
-exports.standardProjectWithKeywords = standardProjectWithKeywords;
+exports.projectWithKeywords = projectWithKeywords;
 exports.projectTitle = projectTitle;
 exports.projectSubtitle = projectSubtitle;
 exports.projectAccessoryPath = projectAccessoryPath;
@@ -97,7 +97,7 @@ function projectKeywords(item) {
     }
     return [...values].filter(Boolean);
 }
-function standardProjectWithKeywords(item) {
+function projectWithKeywords(item) {
     return { ...item, keywords: projectKeywords(item) };
 }
 function projectTitle(item) {

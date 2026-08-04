@@ -1,4 +1,5 @@
-export { loadLocalProjects, projectKeywords, standardProjectWithKeywords } from "./discovery/load-local-projects";
+export { loadLocalProjects } from "./discovery/load-local-projects";
+export { projectKeywords, projectWithKeywords, type ProjectKeywordInput } from "./core/project-keywords";
 export {
   discoverLocalProjects,
   discoverLocalProjectsUnderFolder,

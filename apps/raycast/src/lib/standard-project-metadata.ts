@@ -1,13 +1,6 @@
-import {
-  mergeLocalProjectMetadata,
-  projectKeywords,
-  standardProjectWithKeywords,
-  type LocalProject,
-} from "@raggle-ai/local";
+import { mergeLocalProjectMetadata, type LocalProject } from "@raggle-ai/local";
 import { maxProgressiveIconHydrationProjects } from "@raggle-ai/raycast-adapter";
 import { discoverProjectIcon, hydrateProjectIcons } from "./project-store";
-
-export { projectKeywords, standardProjectWithKeywords };
 
 function iconOwnerWorktrees(items: LocalProject[]) {
   const worktrees = new Set<string>();

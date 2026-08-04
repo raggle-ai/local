@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.standardProjectWithKeywords = exports.projectKeywords = void 0;
 exports.loadLocalProjects = loadLocalProjects;
 const node_fs_1 = require("node:fs");
 const promises_1 = require("node:fs/promises");
@@ -16,8 +15,6 @@ const project_remote_1 = require("../core/project-remote");
 const raggle_project_config_1 = require("../adapters/raggle-project-config");
 const clone_directory_repository_index_1 = require("../cache/clone-directory-repository-index");
 const project_keywords_1 = require("../core/project-keywords");
-Object.defineProperty(exports, "projectKeywords", { enumerable: true, get: function () { return project_keywords_1.projectKeywords; } });
-Object.defineProperty(exports, "standardProjectWithKeywords", { enumerable: true, get: function () { return project_keywords_1.standardProjectWithKeywords; } });
 const project_load_update_1 = require("../core/project-load-update");
 const projectResolveBatchSize = 24;
 const subpathLoadBatchSize = 12;

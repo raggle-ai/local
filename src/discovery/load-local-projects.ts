@@ -18,7 +18,7 @@ import {
   prepareCloneDirectoryIndex,
   type CloneDirectoryRepositoryIndex,
 } from "../cache/clone-directory-repository-index";
-import { projectKeywords, standardProjectWithKeywords } from "../core/project-keywords";
+import { projectKeywords } from "../core/project-keywords";
 import {
   type LocalProject,
   type LoadLocalProjectsOptions,
@@ -877,5 +877,3 @@ export async function loadLocalProjects(
   });
   return nextItems;
 }
-
-export { projectKeywords, standardProjectWithKeywords };
