@@ -49,7 +49,12 @@ type NativeScanner = {
 };
 
 const nativeRequire = createRequire(__filename);
-const nativeScanner = nativeRequire("../native") as NativeScanner;
+let nativeScanner: NativeScanner | undefined;
+
+function loadNativeScanner(): NativeScanner {
+  nativeScanner ??= nativeRequire(process.env.NAPI_RS_NATIVE_LIBRARY_PATH ?? "../native") as NativeScanner;
+  return nativeScanner;
+}
 
 function boundedInteger(value: number | undefined, fallback: number, minimum: number, maximum: number) {
   if (value === undefined || !Number.isFinite(value)) return fallback;
@@ -74,7 +79,7 @@ function normalizeRepository(repository: NativeRepository): DiscoveredRepository
 
 /** Identifies a Git repository rooted at exactly the supplied directory. */
 export function discoverRepository(directory: string): DiscoveredRepository | undefined {
-  const repository = nativeScanner.discoverRepository(path.resolve(directory));
+  const repository = loadNativeScanner().discoverRepository(path.resolve(directory));
   return repository ? normalizeRepository(repository) : undefined;
 }
 
@@ -100,7 +105,7 @@ export async function scanCloneDirectoryRepositories(
   }
 
   let progressCount = 0;
-  const result = await nativeScanner.scanCloneDirectoryRepositories(
+  const result = await loadNativeScanner().scanCloneDirectoryRepositories(
     path.resolve(cloneDirectory),
     limits,
     options?.signal,

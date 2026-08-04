@@ -104,3 +104,4 @@ Object.defineProperty(exports, "writeRaycastProjectsSnapshot", { enumerable: tru
 __exportStar(require("./project-search"), exports);
 __exportStar(require("./project-list-order"), exports);
 __exportStar(require("./project-list-limits"), exports);
+__exportStar(require("./native-scanner"), exports);

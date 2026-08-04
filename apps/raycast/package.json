@@ -181,7 +181,10 @@
     "brace-expansion": "5.0.8"
   },
   "scripts": {
+    "prepare:local": "npm --prefix ../.. run build && node scripts/prepare-native.mjs",
+    "predev": "npm run prepare:local",
     "dev": "ray develop",
+    "prebuild": "npm run prepare:local",
     "build": "ray build -e dist",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
@@ -193,6 +196,8 @@
     "verify:stable-project-order": "node --experimental-strip-types scripts/verify-stable-project-order.ts",
     "verify:project-search": "esbuild scripts/verify-project-search.ts --bundle --platform=node --format=cjs --outfile=/tmp/raggle-project-search-test.cjs && node /tmp/raggle-project-search-test.cjs",
     "verify:local-package": "node scripts/verify-local-package.mjs",
+    "preverify:native-bundle": "npm run prepare:local",
+    "verify:native-bundle": "node scripts/verify-native-bundle.mjs",
     "benchmark:project-search": "esbuild scripts/benchmark-project-search.ts --bundle --platform=node --format=cjs --outfile=/tmp/raggle-project-search-benchmark.cjs && node /tmp/raggle-project-search-benchmark.cjs",
     "verify:radar-catalog": "node --no-warnings --experimental-strip-types test/ai-chat-clients/verify-radar-catalog.ts",
     "verify:radar-target": "node --no-warnings --experimental-strip-types test/ai-chat-clients/verify-radar-target.ts",

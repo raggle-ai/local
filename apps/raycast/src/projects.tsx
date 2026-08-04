@@ -63,6 +63,7 @@ import {
 import { projectKeywords, projectTitle } from "./lib/project";
 import {
   buildProjectSearchIndex,
+  configureRaycastNativeScanner,
   evaluateProjectSearchEntry,
   initialFavoriteProjectRenderLimit,
   initialNonFavoriteProjectRenderLimit,
@@ -102,6 +103,8 @@ import {
 import { needsTursoProjectSourceSetup } from "./lib/turso-project-source-setup";
 
 type StandardProject = RaycastProject;
+
+configureRaycastNativeScanner();
 
 function nowMs() {
   return Date.now();
