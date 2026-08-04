@@ -7,7 +7,7 @@ Raggle is a Raycast extension for managing and executing reusable AI prompts fro
 ## Repository Map
 
 ```
-/Users/andrew/Documents/GitHub/raggle-raycast/
+<repository-root>/apps/raycast/
 ├── src/
 │   ├── prompts.tsx          # Main prompts command (EnhancedList, favorites, remote loading)
 │   ├── projects.tsx         # Standard projects command (git repos, cloning, opening)

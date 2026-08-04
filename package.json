@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "description": "Local project discovery and expansion logic for Raggle",
   "license": "MIT",
-  "author": "Andrew Maguire",
+  "author": "Raggle AI",
   "packageManager": "npm@11.17.0",
   "keywords": [
     "raggle",

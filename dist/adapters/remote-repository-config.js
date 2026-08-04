@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_RAGGLE_DATABASE_URL = void 0;
 exports.normalizeRepositoryReference = normalizeRepositoryReference;
 exports.readRemoteRepositoryConfig = readRemoteRepositoryConfig;
 const node_module_1 = require("node:module");
@@ -9,7 +8,6 @@ const project_config_fields_1 = require("../core/project-config-fields");
 const project_subpaths_1 = require("../core/project-subpaths");
 const import_1 = require("./import");
 const git_repository_1 = require("./git-repository");
-exports.DEFAULT_RAGGLE_DATABASE_URL = "libsql://raggle-raycast-projects-anduimagui.aws-eu-west-1.turso.io";
 const requireFromPackage = (0, node_module_1.createRequire)(__filename);
 function createDatabaseClient(options) {
     if (!options.url.startsWith("file:"))
@@ -35,8 +33,11 @@ function normalizeRepositoryReference(input) {
 }
 async function readRemoteRepositoryConfig(options) {
     const repository = normalizeRepositoryReference(options.repository);
+    const databaseUrl = options.databaseUrl.trim();
+    if (!databaseUrl)
+        throw new Error("A database URL is required");
     const client = createDatabaseClient({
-        url: options.databaseUrl?.trim() || exports.DEFAULT_RAGGLE_DATABASE_URL,
+        url: databaseUrl,
         authToken: options.authToken?.trim() || undefined,
     });
     try {

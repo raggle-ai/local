@@ -48,7 +48,6 @@ export {
 } from "./core/repository-remote-metadata";
 export { applyProjectActionPlugins, resolveProjectActionPluginDirectories } from "./adapters/project-action-plugins";
 export {
-  DEFAULT_RAGGLE_DATABASE_URL,
   normalizeRepositoryReference,
   readRemoteRepositoryConfig,
   type RemoteRepositoryConfig,

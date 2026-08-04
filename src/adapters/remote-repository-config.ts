@@ -5,8 +5,6 @@ import { normalizeSubpaths } from "../core/project-subpaths";
 import { normalizeClonePathTemplate } from "./import";
 import { normalizeRepositoryUrl } from "./git-repository";
 
-export const DEFAULT_RAGGLE_DATABASE_URL = "libsql://raggle-raycast-projects-anduimagui.aws-eu-west-1.turso.io";
-
 const requireFromPackage = createRequire(__filename);
 
 function createDatabaseClient(options: { url: string; authToken?: string }) {
@@ -61,12 +59,14 @@ export function normalizeRepositoryReference(input: string) {
 
 export async function readRemoteRepositoryConfig(options: {
   repository: string;
-  databaseUrl?: string;
+  databaseUrl: string;
   authToken?: string;
 }): Promise<RemoteRepositoryConfig | undefined> {
   const repository = normalizeRepositoryReference(options.repository);
+  const databaseUrl = options.databaseUrl.trim();
+  if (!databaseUrl) throw new Error("A database URL is required");
   const client = createDatabaseClient({
-    url: options.databaseUrl?.trim() || DEFAULT_RAGGLE_DATABASE_URL,
+    url: databaseUrl,
     authToken: options.authToken?.trim() || undefined,
   });
 

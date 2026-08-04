@@ -10,7 +10,7 @@ export { normalizeRepositoryUrl, repositoryName, repositoryDirectoryName, reposi
 export { remoteToBrowserUrl, projectRemoteUrl, projectRemoteBrowserUrl } from "./core/project-remote";
 export { repositoryRemoteMetadata, repositoryRemoteProvider, type RepositoryRemoteMetadata, } from "./core/repository-remote-metadata";
 export { applyProjectActionPlugins, resolveProjectActionPluginDirectories } from "./adapters/project-action-plugins";
-export { DEFAULT_RAGGLE_DATABASE_URL, normalizeRepositoryReference, readRemoteRepositoryConfig, type RemoteRepositoryConfig, } from "./adapters/remote-repository-config";
+export { normalizeRepositoryReference, readRemoteRepositoryConfig, type RemoteRepositoryConfig, } from "./adapters/remote-repository-config";
 export { normalizeSubpaths, normalizeSubpathPaths, normalizeSubpathPath, mergeExistingSubpathSettings, upsertSubpathSettings, readSubpathChildDirectories, shouldIncludeSubpathDirectory, type ProjectSubpathSettingsValues, } from "./core/project-subpaths";
 export { normalizeTags, normalizeFolders } from "./core/project-config-fields";
 export { DEFAULT_GLOBAL_IGNORED_SUBPATHS, DEFAULT_PROJECT_CONFIG_FILES, normalizeIgnoredSubpaths, mergeIgnoredSubpaths, mergeRaggleProjectConfig, readRaggleProjectConfig, readRaggleProjectConfigAsync, readProjectConfigFileAsync, resolveProjectConfigFileNames, ignoredSubpathsForProjectDirectory, ignoredSubpathsFromProjectActionConfigs, raggleProjectConfigFromProjectActionConfigs, type RaggleProjectConfig, RaggleProjectConfigParseError, } from "./adapters/raggle-project-config";

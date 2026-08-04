@@ -75,6 +75,15 @@ try {
   assert.equal(missingConfig.status, 1);
   assert.match(missingConfig.stderr, /Repository is not configured in the remote database: bakerstreetco\/missing/);
 
+  const environmentWithoutDatabaseUrl = { ...process.env };
+  delete environmentWithoutDatabaseUrl.TURSO_DATABASE_URL;
+  const missingDatabaseUrl = spawnSync(process.execPath, [cliPath, "config", "bakerstreetco/skills"], {
+    encoding: "utf8",
+    env: environmentWithoutDatabaseUrl,
+  });
+  assert.equal(missingDatabaseUrl.status, 1);
+  assert.match(missingDatabaseUrl.stderr, /Set TURSO_DATABASE_URL or pass --database-url/);
+
   const repositoryRoot = path.join(tempDirectory, "main");
   const folder = path.join(repositoryRoot, "happysoft");
   const child = path.join(folder, "accounting");

@@ -14,7 +14,7 @@ const usage = `Usage:
 
 REPOSITORY accepts a GitHub owner/repository pair or a Git remote URL.
 --folder defaults to the current directory.
---database-url defaults to TURSO_DATABASE_URL or the Raggle project database.`;
+--database-url defaults to TURSO_DATABASE_URL and is required for config.`;
 function parseArguments(args) {
     let folder = process.cwd();
     let databaseUrl = process.env.TURSO_DATABASE_URL;
@@ -44,7 +44,9 @@ function parseArguments(args) {
     if (commands.length === 1 && commands[0] === "list")
         return { command: "list", folder };
     if (commands.length === 2 && commands[0] === "config") {
-        return { command: "config", repository: commands[1], databaseUrl };
+        if (!databaseUrl?.trim())
+            throw new Error(`Set TURSO_DATABASE_URL or pass --database-url\n${usage}`);
+        return { command: "config", repository: commands[1], databaseUrl: databaseUrl.trim() };
     }
     throw new Error(usage);
 }

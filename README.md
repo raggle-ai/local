@@ -54,14 +54,14 @@ Inspect the configuration stored for a repository in the remote Raggle project
 database with a GitHub `owner/repository` pair or a full Git remote URL:
 
 ```sh
+export TURSO_DATABASE_URL="libsql://your-database.turso.io"
 export TURSO_AUTH_TOKEN="..."
 raggle-local config bakerstreetco/skills
 ```
 
 The JSON result reports normalized tags, folders, explicit subpaths, and whether
 top-level folder discovery is remotely enabled as `allSubpaths`. Set
-`TURSO_DATABASE_URL` or pass `--database-url` to inspect a different libSQL
-database.
+`TURSO_DATABASE_URL` or pass `--database-url` to select the libSQL database.
 
 ## Layout
 

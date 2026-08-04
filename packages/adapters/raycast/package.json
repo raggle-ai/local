@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "description": "Raycast adapter utilities for Raggle local projects",
   "license": "MIT",
-  "author": "Andrew Maguire",
+  "author": "Raggle AI",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

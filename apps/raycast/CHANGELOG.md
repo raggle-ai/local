@@ -6,6 +6,7 @@ This project loosely follows Keep a Changelog and uses semantic versioning as a 
 
 ## [Unreleased]
 
+- Remove personal and machine-specific defaults from package metadata, database configuration, utilities, and fixtures.
 - Replace the last package-level `standardProjectWithKeywords` name with the consumer-neutral `projectWithKeywords` API.
 - Fix local development failing to load the native folder scanner from Raycast's bundled extension output.
 - Fix local development bundling libsql's native Node driver while retaining lazy `file:` database support for the CLI.

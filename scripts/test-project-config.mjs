@@ -6,13 +6,13 @@ import path from "node:path";
 import { loadImportedRepositoriesFromRows, loadLocalProjects, readRaggleProjectConfig } from "../dist/index.js";
 
 const cloneDirectory = mkdtempSync(path.join(os.tmpdir(), "raggle-local-project-config-"));
-const worktree = path.join(cloneDirectory, "anduimagui-raycast-essentials");
+const worktree = path.join(cloneDirectory, "example-raycast-essentials");
 
 try {
   mkdirSync(path.join(worktree, ".git"), { recursive: true });
   writeFileSync(
     path.join(worktree, ".git", "config"),
-    '[core]\n\trepositoryformatversion = 0\n[remote "origin"]\n\turl = https://github.com/anduimagui/raycast-essentials\n',
+    '[core]\n\trepositoryformatversion = 0\n[remote "origin"]\n\turl = https://github.com/example/raycast-essentials\n',
   );
   writeFileSync(path.join(worktree, ".git", "HEAD"), "ref: refs/heads/main\n");
   writeFileSync(
@@ -51,7 +51,7 @@ try {
   assert.deepEqual(config.ignoredSubpaths, ["cache"]);
   assert.deepEqual(config.excludeFolders, ["scripts"]);
 
-  const repositories = loadImportedRepositoriesFromRows([{ url: "https://github.com/anduimagui/raycast-essentials" }]);
+  const repositories = loadImportedRepositoriesFromRows([{ url: "https://github.com/example/raycast-essentials" }]);
   const updateNames = [];
   const projects = await loadLocalProjects(repositories, {
     cloneDirectory,

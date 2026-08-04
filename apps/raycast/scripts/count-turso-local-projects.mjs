@@ -3,15 +3,14 @@ import raggleLocal from '@raggle-ai/local';
 
 const { loadLocalProjects } = raggleLocal;
 
-const url = process.env.TURSO_DATABASE_URL || 'libsql://raggle-raycast-projects-anduimagui.aws-eu-west-1.turso.io';
+const url = process.env.TURSO_DATABASE_URL;
 const authToken = process.env.TURSO_AUTH_TOKEN;
+const cloneDirectory = process.env.CLONE_DIRECTORY;
 
-if (!authToken) {
-  console.error('Set TURSO_AUTH_TOKEN environment variable');
+if (!url || !authToken || !cloneDirectory) {
+  console.error('Set TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, and CLONE_DIRECTORY environment variables');
   process.exit(1);
 }
-
-const cloneDirectory = process.env.CLONE_DIRECTORY || '/Users/andrewmagu/src';
 
 const client = createClient({ url, authToken });
 
